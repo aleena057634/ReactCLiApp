@@ -1,31 +1,59 @@
 
-import React, { useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  View,
+  StyleSheet,
+} from "react-native";
 
-import createUserTable from './src/database/UsersDatabase';
-import SignUp from './src/screens/auth/SignUp';
-import SignIn from './src/screens/auth/SignIn';
-import BottomTabNavigator from './src/navigation/BottomTabNavigator';
+import {
+  NavigationContainer,
+} from "@react-navigation/native";
+
+import {
+  createNativeStackNavigator,
+} from "@react-navigation/native-stack";
+
+import{  userTable }from "./src/database/table";
+
+import SignUp from "./src/screens/auth/SignUp";
+import SignIn from "./src/screens/auth/SignIn";
+import BottomTabNavigator from "./src/navigation/BottomTabNavigator";
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const [databaseReady, setDatabaseReady] = useState(false);
+
   useEffect(() => {
-    const initializeDatabase = async () => {
+    async function initializeDatabase() {
       try {
-        await createUserTable();
+        await userTable  ();
+        setDatabaseReady(true);
       } catch (error) {
-        console.log('Database initialization error:', error);
+        console.log("Database initialization error:", error);
       }
-    };
+    }
 
     initializeDatabase();
   }, []);
 
+  if (!databaseReady) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#292929" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="SignUp">
+      <Stack.Navigator
+        initialRouteName="SignUp"
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
         <Stack.Screen
           name="SignUp"
           component={SignUp}
@@ -39,9 +67,17 @@ export default function App() {
         <Stack.Screen
           name="Main"
           component={BottomTabNavigator}
-          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+});

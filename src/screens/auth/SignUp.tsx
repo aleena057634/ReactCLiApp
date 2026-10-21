@@ -1,303 +1,609 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
+
 import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
   ActivityIndicator,
-} from 'react-native';
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-import { AddUser } from '../../database/UsersDatabase';
+import { Ionicons } from "@react-native-vector-icons/ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
-export default function SignUp({ navigation }: any) {
-  const [Name, setName] = useState('');
-  const [Email, setEmail] = useState('');
-  const [Pass, setPass] = useState('');
-  const [Phone, setPhone] = useState('');
-  const [ConPas, setConPas] = useState('');
-  const [Loading, setLoading] = useState(false);
+import { adduser, checkEmail } from "../../database/queries";
+import { userTable } from "../../database/table";
 
-  const handleSignUp = async () => {
-    const name = Name.trim();
-    const email = Email.trim().toLowerCase();
-    const phone = Phone.trim();
+export default function SignUp() {
+  const navigation = useNavigation<any>();
 
-    if (!name || !email || !Pass || !phone || !ConPas) {
-      Alert.alert('Error', 'Please fill all fields.');
-      return;
+  const [Username, setName] = useState("");
+  const [UserEmail, setEmail] = useState("");
+  const [UserPas, setPas] = useState("");
+  const [ConfirmPas, setConfirmPas] = useState("");
+  const [UserPhone, setPhone] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [nameError, setNameError] = useState("");
+  const [EmailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [passError, setPassError] = useState("");
+  const [confirmPassError, setConfirmPassError] = useState("");
+
+  useEffect(() => {
+    userTable().catch(error => {
+      console.log("User table initialization failed:", error);
+    });
+  }, []);
+
+  // NAME VALIDATION
+  function validName(name: string) {
+    if (!name.trim()) {
+      setNameError("Name can't be empty");
+      return false;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
-      return;
+    if (!/^[A-Za-z ]+$/.test(name.trim())) {
+      setNameError("Name contains letters only");
+      return false;
     }
 
-    if (Pass.length < 8) {
-      Alert.alert(
-        'Error',
-        'Password must be at least 8 characters long.',
+    setNameError("");
+    return true;
+  }
+
+  // EMAIL VALIDATION
+  function validEmail(email: string) {
+    if (!email.trim()) {
+      setEmailError("Email can't be empty");
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.com$/i.test(email.trim())) {
+      setEmailError("Enter a valid email ending in .com");
+      return false;
+    }
+
+    setEmailError("");
+    return true;
+  }
+
+  // PASSWORD VALIDATION
+  function validPass(pass: string) {
+    if (!pass) {
+      setPassError("Password can't be empty");
+      return false;
+    }
+
+    const passwordPattern =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
+
+    if (!passwordPattern.test(pass)) {
+      setPassError(
+        "Use at least 8 characters, a number and a special character"
       );
-      return;
+      return false;
     }
 
-    if (!/[A-Z]/.test(Pass) || !/[a-z]/.test(Pass) || !/[0-9]/.test(Pass)) {
-      Alert.alert(
-        'Error',
-        'Password must contain uppercase, lowercase and a number.',
+    setPassError("");
+    return true;
+  }
+
+  // CONFIRM PASSWORD VALIDATION
+  function validConfirmPass(confirmPass: string) {
+    if (!confirmPass) {
+      setConfirmPassError("Please confirm your password");
+      return false;
+    }
+
+    if (confirmPass !== UserPas) {
+      setConfirmPassError("Passwords do not match");
+      return false;
+    }
+
+    setConfirmPassError("");
+    return true;
+  }
+
+  // PHONE VALIDATION
+  function validphone(phone: string) {
+    if (!phone.trim()) {
+      setPhoneError("Phone can't be empty");
+      return false;
+    }
+
+    if (!/^(03\d{9}|92\d{10})$/.test(phone.trim())) {
+      setPhoneError(
+        "Enter 03001234567 or 923001234567"
       );
+      return false;
+    }
+
+    setPhoneError("");
+    return true;
+  }
+
+  // SIGN UP
+  async function handlebutton() {
+    const email = UserEmail.trim();
+
+    if (
+      !Username.trim() ||
+      !email ||
+      !UserPas ||
+      !ConfirmPas ||
+      !UserPhone.trim()
+    ) {
+      Alert.alert("Error", "All fields are required");
       return;
     }
 
-    if (!/^03\d{9}$/.test(phone)) {
-      Alert.alert(
-        'Error',
-        'Enter a valid Pakistani mobile number, e.g. 03001234567.',
-      );
-      return;
-    }
+    const validname = validName(Username);
+    const validemail = validEmail(email);
+    const validPhone = validphone(UserPhone);
+    const validpassword = validPass(UserPas);
+    const validconfirm = validConfirmPass(ConfirmPas);
 
-    if (Pass !== ConPas) {
-      Alert.alert('Error', 'Passwords do not match.');
+    if (
+      !validname ||
+      !validemail ||
+      !validPhone ||
+      !validpassword ||
+      !validconfirm
+    ) {
       return;
     }
 
     try {
       setLoading(true);
 
-      await AddUser(name, email, phone, Pass);
+      const existEmail = await checkEmail(email);
+
+      if (existEmail) {
+        Alert.alert(
+          "Email Already Registered",
+          "Please use a different email address."
+        );
+        return;
+      }
+
+      const newUserId = await adduser(
+        Username.trim(),
+        email,
+        UserPas,
+        UserPhone.trim()
+      );
+
+      await AsyncStorage.setItem(
+        "userId",
+        String(newUserId)
+      );
+
+      // Main is registered in App.tsx
+      navigation.replace("Main");
+    } catch (error) {
+      console.log("Signup failed:", error);
 
       Alert.alert(
-        'Success',
-        'Your account has been created successfully.',
-        [
-          {
-            text: 'Sign In',
-            onPress: () => navigation.replace('SignIn'),
-          },
-        ],
+        "Error",
+        "Unable to create account. Please try again."
       );
-    } catch (error: any) {
-      const message = String(error?.message ?? error ?? '');
-
-      if (
-        message.toLowerCase().includes('unique') ||
-        message.toLowerCase().includes('constraint')
-      ) {
-        Alert.alert(
-          'Account Exists',
-          'This email address is already registered.',
-        );
-      } else {
-        console.log('Signup error:', error);
-        Alert.alert(
-          'Error',
-          'Unable to create your account. Please try again.',
-        );
-      }
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={styles.keyboardView}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 20 : 0}
     >
-      <View style={styles.header}>
-        <Text style={styles.appName}>StitchMate</Text>
-        <Text style={styles.tagline}>Your Style, Your Stitch</Text>
-      </View>
-
-      <Text style={styles.heading}>Create Account</Text>
-      <Text style={styles.subtitle}>
-        Start managing your tailoring business.
-      </Text>
-
-      <Text style={styles.label}>Full Name</Text>
-      <TextInput
-        placeholder="Enter your full name"
-        placeholderTextColor="#999999"
-        value={Name}
-        onChangeText={setName}
-        style={styles.input}
-        autoCapitalize="words"
-        editable={!Loading}
-      />
-
-      <Text style={styles.label}>Email Address</Text>
-      <TextInput
-        placeholder="Enter your email"
-        placeholderTextColor="#999999"
-        value={Email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-        style={styles.input}
-        editable={!Loading}
-      />
-
-      <Text style={styles.label}>Phone Number</Text>
-      <TextInput
-        placeholder="03001234567"
-        placeholderTextColor="#999999"
-        value={Phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        maxLength={11}
-        style={styles.input}
-        editable={!Loading}
-      />
-
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        placeholder="Create a password"
-        placeholderTextColor="#999999"
-        value={Pass}
-        onChangeText={setPass}
-        secureTextEntry
-        autoCapitalize="none"
-        style={styles.input}
-        editable={!Loading}
-      />
-
-      <Text style={styles.label}>Confirm Password</Text>
-      <TextInput
-        placeholder="Re-enter your password"
-        placeholderTextColor="#999999"
-        value={ConPas}
-        onChangeText={setConPas}
-        secureTextEntry
-        autoCapitalize="none"
-        style={styles.input}
-        editable={!Loading}
-      />
-
-      <TouchableOpacity
-        style={[styles.button, Loading && styles.disabledButton]}
-        onPress={handleSignUp}
-        activeOpacity={0.8}
-        disabled={Loading}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+        alwaysBounceVertical
       >
-        {Loading ? (
-          <ActivityIndicator color="#FFFFFF" />
-        ) : (
-          <Text style={styles.buttonText}>Create Account</Text>
-        )}
-      </TouchableOpacity>
+        <View style={styles.container}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View style={styles.logoCircle}>
+              <Ionicons
+                name="cut-outline"
+                size={35}
+                color={Colors.gold}
+              />
+            </View>
 
-      <View style={styles.loginContainer}>
-        <Text style={styles.loginText}>
-          Already have an account?{' '}
-        </Text>
+            <Text style={styles.title}>Create Account</Text>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate('SignIn')}
-          disabled={Loading}
-        >
-          <Text style={styles.loginButton}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            <Text style={styles.subtitle}>
+              Start managing your tailor business
+            </Text>
+          </View>
+
+          {/* NAME */}
+          <Text style={styles.label}>Name</Text>
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="person-outline"
+              size={21}
+              color={Colors.primary}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={Username}
+              onChangeText={value => {
+                setName(value);
+                setNameError("");
+              }}
+              onBlur={() => validName(Username)}
+              placeholder="Enter your name"
+              placeholderTextColor={Colors.placeholder}
+              autoCapitalize="words"
+              returnKeyType="next"
+            />
+          </View>
+
+          {!!nameError && (
+            <Text style={styles.errorText}>{nameError}</Text>
+          )}
+
+          {/* EMAIL */}
+          <Text style={styles.label}>Email</Text>
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="mail-outline"
+              size={21}
+              color={Colors.primary}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={UserEmail}
+              onChangeText={value => {
+                setEmail(value);
+                setEmailError("");
+              }}
+              onBlur={() => validEmail(UserEmail)}
+              placeholder="Enter your email"
+              placeholderTextColor={Colors.placeholder}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+            />
+          </View>
+
+          {!!EmailError && (
+            <Text style={styles.errorText}>{EmailError}</Text>
+          )}
+
+          {/* PHONE */}
+          <Text style={styles.label}>Phone</Text>
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="call-outline"
+              size={21}
+              color={Colors.primary}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={UserPhone}
+              onChangeText={value => {
+                setPhone(value);
+                setPhoneError("");
+              }}
+              onBlur={() => validphone(UserPhone)}
+              placeholder="03001234567"
+              placeholderTextColor={Colors.placeholder}
+              keyboardType="phone-pad"
+              returnKeyType="next"
+            />
+          </View>
+
+          {!!phoneError && (
+            <Text style={styles.errorText}>{phoneError}</Text>
+          )}
+
+          {/* PASSWORD */}
+          <Text style={styles.label}>Password</Text>
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="lock-closed-outline"
+              size={21}
+              color={Colors.primary}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={UserPas}
+              onChangeText={value => {
+                setPas(value);
+                setPassError("");
+
+                if (ConfirmPas) {
+                  setConfirmPassError(
+                    value === ConfirmPas
+                      ? ""
+                      : "Passwords do not match"
+                  );
+                }
+              }}
+              onBlur={() => validPass(UserPas)}
+              placeholder="Enter your password"
+              placeholderTextColor={Colors.placeholder}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+            />
+
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={10}
+            >
+              <Ionicons
+                name={showPassword ? "eye-outline" : "eye-off-outline"}
+                size={21}
+                color={Colors.primary}
+              />
+            </Pressable>
+          </View>
+
+          {!!passError && (
+            <Text style={styles.errorText}>{passError}</Text>
+          )}
+
+          {/* CONFIRM PASSWORD */}
+          <Text style={styles.label}>Confirm Password</Text>
+
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="shield-checkmark-outline"
+              size={21}
+              color={Colors.primary}
+            />
+
+            <TextInput
+              style={styles.input}
+              value={ConfirmPas}
+              onChangeText={value => {
+                setConfirmPas(value);
+                setConfirmPassError(
+                  value === UserPas
+                    ? ""
+                    : "Passwords do not match"
+                );
+              }}
+              onBlur={() => validConfirmPass(ConfirmPas)}
+              placeholder="Re-enter your password"
+              placeholderTextColor={Colors.placeholder}
+              secureTextEntry={!showConfirmPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="done"
+              onSubmitEditing={handlebutton}
+            />
+
+            <Pressable
+              onPress={() =>
+                setShowConfirmPassword(!showConfirmPassword)
+              }
+              hitSlop={10}
+            >
+              <Ionicons
+                name={
+                  showConfirmPassword
+                    ? "eye-outline"
+                    : "eye-off-outline"
+                }
+                size={21}
+                color={Colors.primary}
+              />
+            </Pressable>
+          </View>
+
+          {!!confirmPassError && (
+            <Text style={styles.errorText}>
+              {confirmPassError}
+            </Text>
+          )}
+
+          {/* CREATE ACCOUNT */}
+          <Pressable
+            style={[
+              styles.button,
+              loading && styles.disabledButton,
+            ]}
+            onPress={handlebutton}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>
+                Create Account
+              </Text>
+            )}
+          </Pressable>
+
+          {/* SIGN IN */}
+          <View style={styles.signin}>
+            <Text style={styles.signinText}>
+              Already have an account?
+            </Text>
+
+            <Pressable
+              onPress={() => navigation.replace("SignIn")}
+            >
+              <Text style={styles.signinLink}>Sign In</Text>
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
+// COLORS
+const Colors = {
+  background: "#FFFFFF",
+  primary: "#292929",
+  text: "#292929",
+  placeholder: "#999999",
+  border: "#DDDDDD",
+  card: "#FFFFFF",
+  error: "#D32F2F",
+  secondaryText: "#666666",
+  button: "#292929",
+  gold: "#C5A253",
+};
+
+// STYLES
 const styles = StyleSheet.create({
-  container: {
+  keyboardView: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+
+  scrollView: {
+    flex: 1,
+  },
+
+  scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 30,
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    paddingBottom: 30,
+  },
+
+  container: {
+    paddingHorizontal: 25,
+    paddingTop: 25,
+    paddingBottom: 25,
   },
 
   header: {
-    alignItems: 'center',
-    marginBottom: 28,
+    alignItems: "center",
+    marginBottom: 25,
   },
 
-  appName: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#222222',
-    letterSpacing: 1,
+  logoCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: Colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 15,
   },
 
-  tagline: {
-    fontSize: 13,
-    color: '#C9A227',
-    marginTop: 5,
-  },
-
-  heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#222222',
-    marginBottom: 6,
+  title: {
+    fontSize: 31,
+    fontWeight: "800",
+    color: Colors.primary,
+    textAlign: "center",
   },
 
   subtitle: {
-    fontSize: 14,
-    color: '#777777',
-    marginBottom: 24,
+    fontSize: 13,
+    color: Colors.secondaryText,
+    textAlign: "center",
+    marginTop: 7,
+    lineHeight: 19,
   },
 
   label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333333',
+    fontSize: 15,
+    fontWeight: "700",
+    color: Colors.text,
     marginBottom: 7,
   },
 
-  input: {
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    minHeight: 52,
+    backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    borderRadius: 9,
+    borderColor: Colors.border,
+    borderRadius: 14,
     paddingHorizontal: 14,
+    marginBottom: 5,
+  },
+
+  input: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 12,
     paddingVertical: 12,
-    marginBottom: 17,
-    color: '#222222',
     fontSize: 15,
+    color: Colors.text,
+  },
+
+  errorText: {
+    color: Colors.error,
+    fontSize: 12,
+    marginLeft: 4,
+    marginBottom: 12,
   },
 
   button: {
-    backgroundColor: '#222222',
-    paddingVertical: 15,
-    borderRadius: 9,
-    alignItems: 'center',
-    marginTop: 5,
+    minHeight: 53,
+    backgroundColor: Colors.button,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 15,
+    elevation: 3,
   },
 
   disabledButton: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
 
   buttonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: "#FFFFFF",
     fontSize: 16,
+    fontWeight: "700",
   },
 
-  loginContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+  signin: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    flexWrap: "wrap",
     marginTop: 22,
   },
 
-  loginText: {
-    color: '#555555',
+  signinText: {
+    color: Colors.secondaryText,
     fontSize: 14,
   },
 
-  loginButton: {
-    color: '#C9A227',
-    fontWeight: 'bold',
+  signinLink: {
+    color: Colors.primary,
+    fontWeight: "800",
     fontSize: 14,
+    marginLeft: 5,
+    paddingVertical: 5,
   },
 });
