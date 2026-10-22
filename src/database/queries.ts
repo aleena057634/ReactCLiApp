@@ -165,3 +165,14 @@ export async function SignInValidation(
     throw error;
   }
 }
+// ================================Phone check duplication=========
+export const checkCustomerPhone = async (phone: string) => {
+  const db = await databaseConnection;
+
+  const [result] = await db.executeSql(
+    'SELECT * FROM CUSTOMER WHERE PHONE = ?',
+    [phone],
+  );
+
+  return result.rows.length > 0;
+};

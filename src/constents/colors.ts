@@ -1,11 +1,11 @@
 
-const Colors = {
+const colors = {
   primary: "#164E63",
   accent: "#1B4A5A",
-  lightGray: "#E5E5E5",
-  background: "#FFFFFF",
+ lightGray:"#E5E5E5",
+  background: "#F5F7F9",
   card: "#FFFFFF",
-  inputBackground: "#FFFFFF",
+  inputBackground: "#EEF5F7",
 
   text: "#172B34",
   secondaryText: "#71808A",
@@ -23,4 +23,4 @@ const Colors = {
   overlay: "rgba(0, 0, 0, 0.4)",
 };
 
-export default Colors;
+export default colors;

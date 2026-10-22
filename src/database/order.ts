@@ -95,7 +95,7 @@ export async function addOrder(
 
     console.log("Order added successfully");
 
-    return result;
+return (result as any).insertId;
   } catch (error) {
     console.log("Failed to add order:", error);
     throw error;

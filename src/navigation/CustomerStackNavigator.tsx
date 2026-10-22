@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ListCustomerScreen from '../screens/Customer/ListCustomerScreen';
 import AddCustomers from '../screens/Customer/AddCustomers';
 import DetailedCustomerScreen from '../screens/Customer/DetailedCustomerScreen';
-
+import OrderStackNavigation from './OrderStackNavigation';
 const Stack = createNativeStackNavigator();
 
 export default function CustomerStackNavigator() {
@@ -27,6 +27,11 @@ export default function CustomerStackNavigator() {
         component={DetailedCustomerScreen}
         options={{ title: 'Customer Details' }}
       />
+
+      <Stack.Screen
+  name="OrderStack"
+  component={OrderStackNavigation}
+/>
     </Stack.Navigator>
   );
 }

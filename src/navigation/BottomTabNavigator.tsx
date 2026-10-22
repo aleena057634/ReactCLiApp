@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
+import OrderStackNavigation from './OrderStackNavigation';
 import ListOrderScreen from '../screens/Orders/ListOrderScreen';
 import Setting from '../screens/settings/Setting';
 import Dashbord from '../Dashbord';
@@ -58,7 +58,10 @@ export default function BottomTabNavigator() {
         component={CustomerStackNavigator}
       />
 
-      <Tab.Screen name="Orders" component={ListOrderScreen} />
+     <Tab.Screen
+  name="Orders"
+  component={OrderStackNavigation}
+/>
 
       <Tab.Screen name="Settings" component={Setting} />
     </Tab.Navigator>
