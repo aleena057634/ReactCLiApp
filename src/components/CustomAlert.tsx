@@ -262,8 +262,44 @@ export function ProfileImageModal({
       </View>
     </Modal>
   );
+  
 }
+type CustomButtonProps = {
+  title: string;
+  onPress: () => void | Promise<void>;
+};
 
+export function CustomButton({
+  title,
+  onPress,
+}: CustomButtonProps) {
+  const { theme } = useContext(ThemeContext);
+
+  return (
+    <Pressable
+      style={[
+        styles.okButton,
+        {
+          backgroundColor: theme.primary,
+          alignSelf: 'stretch',
+        },
+      ]}
+      onPress={onPress}
+    >
+      <Text
+        style={[
+          styles.okText,
+          {
+            color: theme.white,
+            textAlign: 'center',
+          },
+        ]}
+      >
+        {title}
+      </Text>
+    </Pressable>
+  );
+}
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,

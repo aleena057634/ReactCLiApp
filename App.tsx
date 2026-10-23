@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useContext } from 'react';
-
+import SplashScreen from './src/SplashScreen';
 import {
   ActivityIndicator,
   View,
@@ -18,12 +18,16 @@ import {
   userTable,
   Customer_Table,
 } from './src/database/table';
-
+import { Payment_Value,payment_table} from './src/database/payment';
 import { order_Table } from './src/database/order';
 
 import SignUp from './src/screens/auth/SignUp';
 import SignIn from './src/screens/auth/SignIn';
 import BottomTabNavigator from './src/navigation/BottomTabNavigator';
+import Payment from './src/screens/Payment';
+import SettingStackNavigation from './src/navigation/SettingStackNavigation';
+import { Order_Image } from './src/database/ImageCrud';
+import OrderStackNavigation from './src/navigation/OrderStackNavigation';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,29 +44,29 @@ function AppNavigation() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Main"
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: theme.borderFocus,
-          },
-          headerTintColor: theme. success,
-          headerTitleStyle: {
-            fontSize: 18,
-            fontWeight: '700',
-            color:theme.background
-          },
-          headerShadowVisible: false,
-          contentStyle: {
-            backgroundColor: "#4b4343",
-          },
-        }}
-      >
+     <Stack.Navigator
+  initialRouteName="SplashScreen"
+  screenOptions={{
+    headerStyle: {
+      backgroundColor: theme.card,
+    },
+    headerTintColor: theme.text,
+    headerTitleStyle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: theme.text,
+    },
+    headerShadowVisible: false,
+    contentStyle: {
+      backgroundColor: theme.background,
+    },
+  }}
+>
         <Stack.Screen
           name="SignUp"
           component={SignUp}
           options={{
-            headerShown: false,
+            headerShown:true,
           }}
         />
 
@@ -70,15 +74,45 @@ function AppNavigation() {
           name="SignIn"
           component={SignIn}
           options={{
-            headerShown: false,
+            headerShown: true,
           }}
         />
 
         <Stack.Screen
-          name="Main"
+          name="Dashboard"
           component={BottomTabNavigator}
           options={{
+            headerShown:false,
+          }}
+        />
+         <Stack.Screen
+          name="Payment"
+          component={Payment}
+          options={{
             headerShown:true,
+          }}
+        />
+
+          <Stack.Screen
+          name="Setting"
+          component={SettingStackNavigation}
+          options={{
+            headerShown:false,
+          }}
+        />
+
+   <Stack.Screen
+          name="SplashScreen"
+          component={SplashScreen}
+          options={{
+            headerShown:false,
+          }}
+        />
+          <Stack.Screen
+          name="OrderStackNavigation"
+          component={OrderStackNavigation}
+          options={{
+            headerShown:false,
           }}
         />
       </Stack.Navigator>
@@ -95,6 +129,8 @@ export default function App() {
         await userTable();
         await Customer_Table();
         await order_Table();
+payment_table();
+Order_Image();
 
         setDatabaseReady(true);
       } catch (error) {

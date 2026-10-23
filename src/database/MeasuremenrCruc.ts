@@ -1,4 +1,5 @@
 
+
 import databaseConnection from './DatabaseConnection';
 
 // Add Measurement
@@ -10,7 +11,7 @@ export async function addMeasurement(
   try {
     const db = await databaseConnection;
 
-    await db.executeSql(
+    const [result] = await db.executeSql(
       `INSERT INTO MEASUREMENTS (
         CUSTOMER_ID, TYPE, CHEST, WAIST, QAMEEZ_LENGTH,
         SHIRT_LENGTH, SHALWAR_LENGTH, TROUSER_LENGTH,
@@ -39,8 +40,8 @@ export async function addMeasurement(
       ]
     );
 
-    console.log('Measurement added successfully');
-    return true;
+    console.log('Measurement added. ID:', result.insertId);
+    return result.insertId;
   } catch (error) {
     console.log('Failed to add measurement:', error);
     throw error;
@@ -55,7 +56,8 @@ export async function getMeasurements(customerId: number) {
     const [result] = await db.executeSql(
       `SELECT *
        FROM MEASUREMENTS
-       WHERE CUSTOMER_ID = ?`,
+       WHERE CUSTOMER_ID = ?
+       ORDER BY MEASUREMENT_ID DESC`,
       [customerId]
     );
 
@@ -72,6 +74,10 @@ export async function getMeasurements(customerId: number) {
     throw error;
   }
 }
+
+
+// Get Measurements by Customer ID
+
 
 // Update Measurement
 export async function updateMeasurement(

@@ -16,6 +16,19 @@ export async function AddCustomer(
       throw new Error('No logged-in user found');
     }
 
+    // Check duplicate phone for the current user only
+    const [result] = await db.executeSql(
+      `SELECT ID FROM CUSTOMER
+       WHERE PHONE = ? AND USER_ID = ?`,
+      [phone, Number(userId)]
+    );
+
+    if (result.rows.length > 0) {
+      throw new Error(
+        'This phone number already exists in your customers.'
+      );
+    }
+
     await db.executeSql(
       `INSERT INTO CUSTOMER (NAME, PHONE, ADDRESS, USER_ID)
        VALUES (?, ?, ?, ?)`,
@@ -29,7 +42,9 @@ export async function AddCustomer(
   }
 }
 
-// Get Customers of Logged-in User
+
+
+
 export async function getCustomers() {
   try {
     const db = await databaseConnection;

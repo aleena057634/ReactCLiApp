@@ -1,24 +1,33 @@
 
-import React, { useCallback, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 import {
-  Alert,
   FlatList,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   View,
-} from 'react-native';
+} from "react-native";
 
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@react-native-vector-icons/ionicons';
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import {
-  deleteCustomers,
-  showCustomer,
-} from '../../database/queries';
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
+
+import FloatingButton from "../../components/FloatingButton";
+import SearchBox from "../../components/SearchBox";
+import CustomAlert from "../../components/CustomAlert";
+import ThemeContext from "../../context/ThemeContext";
+import {
+  DeleteCustomer,
+  getCustomers,
+} from "../../database/CustomerCru";
 
 type Customer = {
   ID: number;
@@ -27,251 +36,293 @@ type Customer = {
   ADDRESS: string;
 };
 
-const Colors = {
-  background: '#FFFFFF',
-  primary: '#292929',
-  gold: '#C9A227',
-  text: '#292929',
-  secondaryText: '#666666',
-  border: '#DDDDDD',
-  card: '#FFFFFF',
-  placeholder: '#999999',
-  error: '#D32F2F',
-};
-
-export default function ListCustomerScreen() {
+export default function CustomerList() {
   const navigation = useNavigation<any>();
+  const { theme } = useContext(ThemeContext);
 
-  const [search, setSearch] = useState('');
-  const [customersData, setCustomersData] = useState<Customer[]>([]);
+  const [search, setSearch] = useState("");
+  const [CustomersData, setCustomerData] = useState<Customer[]>([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [showEditAlert, setEditAlert] = useState(false);
 
-  // Load customers whenever this screen becomes active
-  const loadCustomers = useCallback(async () => {
+  const filteredCustomers = CustomersData.filter((item) =>
+    item.NAME.toLowerCase().includes(search.toLowerCase())
+  );
+
+  async function LoadCustomer() {
     try {
-      const data = await showCustomer();
-      setCustomersData(data);
+      const data = await getCustomers();
+      setCustomerData(data);
     } catch (error) {
-      console.log('Failed to load customers:', error);
-      Alert.alert('Error', 'Could not load customers.');
+      console.log("Failed to load customers:", error);
     }
-  }, []);
+  }
 
   useFocusEffect(
     useCallback(() => {
-      loadCustomers();
-      setSearch('');
-    }, [loadCustomers]),
+      LoadCustomer();
+      setSearch("");
+    }, [])
   );
 
-  // Search customers by name
-  const filteredCustomers = customersData.filter(customer =>
-    customer.NAME.toLowerCase().includes(search.trim().toLowerCase()),
-  );
-
-  // Delete customer
-  const handleDeleteCustomer = (id: number) => {
-    Alert.alert(
-      'Delete Customer',
-      'Are you sure you want to delete this customer permanently?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteCustomers(id);
-              await loadCustomers();
-            } catch (error) {
-              console.log('Error deleting customer:', error);
-              Alert.alert('Error', 'Could not delete customer.');
-            }
-          },
-        },
-      ],
-    );
-  };
-
-  // Open edit screen
-  const handleEditCustomer = (customer: Customer) => {
-    Alert.alert(
-      'Edit Customer',
-      'Do you want to edit this customer’s information?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Edit',
-          onPress: () => {
-            navigation.navigate('AddCustomer', {
-              ID: customer.ID,
-              NAME: customer.NAME,
-              PHONE: customer.PHONE,
-              ADDRESS: customer.ADDRESS,
-            });
-          },
-        },
-      ],
-    );
-  };
-
-  // Customer card
-  const renderCustomer = ({ item }: { item: Customer }) => (
-    <Pressable
-      style={styles.card}
-      onPress={() =>
-        navigation.navigate('CustomerDetail', {
-          id: item.ID,
-        })
-      }
-    >
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {item.NAME?.charAt(0).toUpperCase()}
-        </Text>
-      </View>
-
-      <View style={styles.customerInfo}>
-        <Text style={styles.customerName} numberOfLines={1}>
-          {item.NAME}
-        </Text>
-
-        <View style={styles.infoRow}>
-          <Ionicons
-            name="call-outline"
-            size={15}
-            color={Colors.primary}
-          />
-          <Text style={styles.infoText} numberOfLines={1}>
-            {item.PHONE}
-          </Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Ionicons
-            name="location-outline"
-            size={15}
-            color={Colors.primary}
-          />
-          <Text style={styles.infoText} numberOfLines={1}>
-            {item.ADDRESS}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.actions}>
-        <Pressable
-          style={styles.actionButton}
-          hitSlop={5}
-          onPress={() => handleDeleteCustomer(item.ID)}
-        >
-          <Ionicons
-            name="trash-outline"
-            size={19}
-            color={Colors.primary}
-          />
-        </Pressable>
-
-        <Pressable
-          style={styles.actionButton}
-          hitSlop={5}
-          onPress={() => handleEditCustomer(item)}
-        >
-          <Ionicons
-            name="create-outline"
-            size={19}
-            color={Colors.primary}
-          />
-        </Pressable>
-      </View>
-    </Pressable>
-  );
+  async function HandleDeletedCustomer(id: number) {
+    try {
+      await DeleteCustomer(id);
+      await LoadCustomer();
+    } catch (error) {
+      console.log("Error deleting customer:", error);
+    }
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Customers</Text>
-
-      <Text style={styles.subtitle}>
-        Manage your customer information
+    <SafeAreaView
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
+    >
+      {/* Customers Heading */}
+      <Text
+        style={[
+          styles.heading,
+          { color: theme.text },
+        ]}
+      >
+        Customers
       </Text>
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons
-          name="search-outline"
-          size={20}
-          color={Colors.secondaryText}
-        />
-
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search customers..."
-          placeholderTextColor={Colors.placeholder}
+        <SearchBox
           value={search}
           onChangeText={setSearch}
-          autoCapitalize="none"
-          autoCorrect={false}
         />
-
-        {search.length > 0 && (
-          <Pressable onPress={() => setSearch('')} hitSlop={8}>
-            <Ionicons
-              name="close-circle"
-              size={20}
-              color={Colors.secondaryText}
-            />
-          </Pressable>
-        )}
       </View>
 
       {/* Customer List */}
       <FlatList
         data={filteredCustomers}
-        keyExtractor={item => item.ID.toString()}
-        renderItem={renderCustomer}
+        keyExtractor={(item) => item.ID.toString()}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={[
-          styles.listContainer,
-          filteredCustomers.length === 0 && styles.emptyContainer,
-        ]}
+        contentContainerStyle={
+          filteredCustomers.length === 0
+            ? styles.emptyContainer
+            : styles.listContainer
+        }
         ListEmptyComponent={
           <View style={styles.emptyContent}>
-            <View style={styles.emptyIcon}>
+            <View
+              style={[
+                styles.emptyIcon,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                },
+              ]}
+            >
               <Ionicons
                 name="people-outline"
-                size={45}
-                color={Colors.gold}
+                size={48}
+                color={theme.primary}
               />
             </View>
 
-            <Text style={styles.emptyTitle}>
-              {search ? 'No Customers Found' : 'No Customers Yet'}
+            <Text
+              style={[
+                styles.emptyTitle,
+                { color: theme.text },
+              ]}
+            >
+              No Customers Found
             </Text>
 
-            <Text style={styles.emptyText}>
-              {search
-                ? 'Try searching with another name.'
-                : 'Add a customer to get started.'}
+            <Text
+              style={[
+                styles.emptyText,
+                { color: theme.secondaryText },
+              ]}
+            >
+              Add a customer to get started.
             </Text>
           </View>
         }
+        renderItem={({ item }) => (
+          <Pressable
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+            onPress={() => {
+              navigation.navigate("CustomerDetail", {
+                id: item.ID.toString(),
+              });
+            }}
+          >
+            {/* Customer Avatar */}
+            <View
+              style={[
+                styles.iconContainer,
+                { backgroundColor: theme.primary },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.iconText,
+                  { color: theme.white },
+                ]}
+              >
+                {item.NAME?.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+
+            {/* Customer Info */}
+            <View style={styles.customerInfo}>
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.name,
+                  { color: theme.text },
+                ]}
+              >
+                {item.NAME}
+              </Text>
+
+              <View style={styles.infoRow}>
+                <Ionicons
+                  name="call-outline"
+                  size={14}
+                  color={theme.primary}
+                />
+
+                <Text
+                  style={[
+                    styles.infoText,
+                    { color: theme.secondaryText },
+                  ]}
+                >
+                  {item.PHONE}
+                </Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Ionicons
+                  name="location-outline"
+                  size={14}
+                  color={theme.primary}
+                />
+
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.infoText,
+                    { color: theme.secondaryText },
+                  ]}
+                >
+                  {item.ADDRESS}
+                </Text>
+              </View>
+            </View>
+
+            {/* Actions */}
+            <View style={styles.actions}>
+              {/* Delete Button */}
+              <Pressable
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: theme.background },
+                ]}
+                onPress={() => {
+                  setDeleteId(item.ID);
+                  setShowAlert(true);
+                }}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  color={theme.primary}
+                  size={18}
+                />
+              </Pressable>
+
+              {/* Edit Button */}
+              <Pressable
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: theme.background },
+                ]}
+                onPress={() => {
+                  setEditId(item.ID);
+                  setEditAlert(true);
+                }}
+              >
+                <Ionicons
+                  name="create-outline"
+                  color={theme.primary}
+                  size={18}
+                />
+              </Pressable>
+            </View>
+          </Pressable>
+        )}
       />
 
-      {/* Add Customer Button */}
-      <Pressable
-        style={styles.floatingButton}
-        onPress={() => navigation.navigate('AddCustomer')}
-        accessibilityRole="button"
-        accessibilityLabel="Add customer"
-      >
-        <Ionicons name="add" size={30} color="#FFFFFF" />
-      </Pressable>
+      {/* Delete Confirmation */}
+      <CustomAlert
+        visible={showAlert}
+        title="Delete Customer"
+        Message="Are you sure you want to delete customer permanently?"
+        onCancel={() => {
+          setShowAlert(false);
+          setDeleteId(null);
+        }}
+        onConfirm={async () => {
+          if (deleteId !== null) {
+            await HandleDeletedCustomer(deleteId);
+          }
+
+          setShowAlert(false);
+          setDeleteId(null);
+        }}
+      />
+
+      {/* Edit Confirmation */}
+      <CustomAlert
+        visible={showEditAlert}
+        title="Edit Customer Information"
+        Message="Are you sure you want to edit information?"
+        onCancel={() => {
+          setEditAlert(false);
+          setEditId(null);
+        }}
+        onConfirm={() => {
+          const customer = CustomersData.find(
+            (item) => item.ID === editId
+          );
+
+          if (customer) {
+            navigation.navigate("AddCustomer", {
+              ID: customer.ID.toString(),
+              NAME: customer.NAME,
+              PHONE: customer.PHONE,
+              ADDRESS: customer.ADDRESS,
+            });
+          }
+
+          setEditAlert(false);
+          setEditId(null);
+        }}
+      />
+
+      {/* Add Customer */}
+      <FloatingButton
+        onPress={() => {
+          navigation.navigate("AddCustomer");
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -279,172 +330,124 @@ export default function ListCustomerScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
 
   heading: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: Colors.text,
-    marginHorizontal: 18,
-    marginTop: 12,
-  },
-
-  subtitle: {
-    fontSize: 14,
-    color: Colors.secondaryText,
-    marginHorizontal: 18,
-    marginTop: 5,
-    marginBottom: 18,
+    fontSize: 24,
+    fontWeight: "bold",
+    marginHorizontal: 14,
+    marginBottom: 8,
   },
 
   searchContainer: {
-    height: 49,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 13,
-    marginHorizontal: 16,
-    marginBottom: 15,
-  },
-
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
-    color: Colors.text,
-    paddingVertical: 8,
+    marginHorizontal: 14,
+    marginBottom: 8,
   },
 
   listContainer: {
     paddingHorizontal: 14,
-    paddingTop: 3,
+    paddingTop: 4,
     paddingBottom: 100,
   },
 
   emptyContainer: {
     flexGrow: 1,
+    paddingHorizontal: 20,
   },
 
   emptyContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 70,
   },
 
   emptyIcon: {
-    width: 85,
-    height: 85,
-    borderRadius: 43,
-    backgroundColor: '#FAF6E9',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E8D9A6',
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 16,
   },
 
   emptyTitle: {
-    fontSize: 19,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 7,
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 6,
   },
 
   emptyText: {
     fontSize: 14,
-    color: Colors.secondaryText,
-    textAlign: 'center',
   },
 
   card: {
-    minHeight: 86,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 16,
+    minHeight: 82,
+    borderRadius: 18,
     paddingVertical: 12,
-    paddingHorizontal: 11,
-    marginBottom: 11,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
     elevation: 2,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
 
-  avatar: {
-    width: 49,
-    height: 49,
-    borderRadius: 25,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 11,
+  iconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
 
-  avatarText: {
+  iconText: {
     fontSize: 21,
-    fontWeight: '800',
-    color: Colors.gold,
+    fontWeight: "800",
   },
 
   customerInfo: {
     flex: 1,
-    paddingRight: 5,
+    paddingRight: 8,
   },
 
-  customerName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: Colors.text,
-    marginBottom: 5,
+  name: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 6,
   },
 
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 3,
   },
 
   infoText: {
-    flex: 1,
-    fontSize: 12,
-    color: Colors.secondaryText,
+    fontSize: 12.5,
     marginLeft: 5,
+    flex: 1,
   },
 
   actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
 
   actionButton: {
-    width: 32,
+    width: 34,
     height: 34,
-    borderRadius: 10,
-    backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  floatingButton: {
-    position: 'absolute',
-    right: 22,
-    bottom: 25,
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
+    borderRadius: 17,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

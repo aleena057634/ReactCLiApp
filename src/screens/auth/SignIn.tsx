@@ -1,9 +1,7 @@
-
-import React, { useState } from 'react';
-
+import React, { useContext, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,28 +10,34 @@ import {
   Text,
   TextInput,
   View,
-} from 'react-native';
+} from "react-native";
+import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { useNavigation } from "@react-navigation/native";
 
-import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { ConfirmAlert } from "../../components/CustomAlert";
+import ThemeContext from "../../context/ThemeContext";
+import { SignInValidation } from "../../database/queries";
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { useNavigation } from '@react-navigation/native';
 
-import { SignInValidation } from '../../database/queries';
 
 export default function SignIn() {
-  const navigation = useNavigation<any>();
+ 
+ const navigation=useNavigation<any>(); 
+  const { theme } = useContext(ThemeContext);
 
-  const [email, setEmail] = useState('');
-  const [pass, setPass] = useState('');
+  const [email, setEmail] = useState("");
+  const [pass, setPass] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [emailError, setEmailError] = useState('');
-  const [passError, setPassError] = useState('');
+  const [alertPass, setAlertPass] = useState(false);
+  const [Aalert, AshowAlert] = useState(false);
+  const [errorAlert, setErrorAlert] = useState(false);
 
-  // EMAIL VALIDATION
+  const [EmailError, setEmailError] = useState("");
+  const [PassError, SetPassError] = useState("");
+
   function validateEmail(value: string) {
     const Email = value.trim();
 
@@ -42,40 +46,45 @@ export default function SignIn() {
       return false;
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.com$/;
+  const emailPattern = /^[^\s@]+@[^\s@]+\.com$/;
 
     if (!emailPattern.test(Email)) {
-      setEmailError('Invalid email');
+      setEmailError("Invalid email");
       return false;
     }
 
-    setEmailError('');
+    setEmailError("");
     return true;
   }
 
-  // PASSWORD VALIDATION
   function validatePassword(value: string) {
-    if (!value.trim()) {
-      setPassError("Password can't be empty");
+    const Password = value.trim();
+
+    if (!Password) {
+      SetPassError("Password can't be empty");
       return false;
     }
 
     const passwordPattern =
       /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&]).{8,}$/;
 
-    if (!passwordPattern.test(value)) {
-      setPassError(
-        'Password must contain 8 characters, a number and a special character',
+    if (!passwordPattern.test(Password)) {
+      SetPassError(
+        "Password must contain 8 characters, a number and a special character"
       );
       return false;
     }
 
-    setPassError('');
+    SetPassError("");
     return true;
   }
 
-  // SIGN IN
-  async function checkUser() {
+  async function checkUser(email: string, pass: string) {
+    if (!email.trim() || !pass.trim()) {
+      AshowAlert(true);
+      return;
+    }
+
     const validEmail = validateEmail(email);
     const validPassword = validatePassword(pass);
 
@@ -83,33 +92,42 @@ export default function SignIn() {
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      const user = await SignInValidation(email.trim(), pass);
+    try {
+      const Email = email.trim();
+      const Password = pass.trim();
+
+      const user = await SignInValidation(Email, Password);
 
       if (!user) {
-        Alert.alert('Sign In Failed', 'Invalid email or password');
+        setAlertPass(true);
+        setLoading(false);
         return;
       }
 
-      await AsyncStorage.setItem('userId', String(user.ID));
+      await AsyncStorage.setItem(
+        "userId",
+        String(user.ID)
+      );
 
-      // Main is registered in App.tsx
-      navigation.replace('Main');
-    } catch (error) {
-      console.log('SIGN IN ERROR:', error);
-
-      Alert.alert('Error', 'Something went wrong during sign in');
-    } finally {
+      navigation.replace("Dashboard");
       setLoading(false);
+    } catch (error) {
+      console.log("SIGN IN ERROR:", error);
+      setLoading(false);
+      setErrorAlert(true);
     }
   }
 
+  const styles = createStyles(theme);
+
   return (
     <KeyboardAvoidingView
+      behavior={
+        Platform.OS === "ios" ? "padding" : "height"
+      }
       style={styles.keyboardView}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -117,271 +135,272 @@ export default function SignIn() {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.container}>
-          {/* HEADER */}
-          <View style={styles.header}>
-            <View style={styles.logoCircle}>
-              <Ionicons name="cut-outline" size={34} color={Colors.gold} />
-            </View>
 
-            <Text style={styles.title}>Welcome Back</Text>
+          {/* Header */}
+          <View style={styles.header}>
+            
+            
+
+            <Text style={styles.title}>
+              Welcome Back
+            </Text>
 
             <Text style={styles.subtitle}>
-              Sign in to continue your business
+              Sign in to continue your Business
             </Text>
           </View>
 
-          {/* FORM */}
+          {/* Form */}
           <View style={styles.form}>
-            {/* EMAIL */}
-            <Text style={styles.label}>Email</Text>
+
+            {/* Email */}
+            <Text style={styles.label}>
+              Email
+            </Text>
 
             <View style={styles.inputContainer}>
               <Ionicons
                 name="mail-outline"
-                size={21}
-                color={Colors.primary}
+                size={20}
+                color={theme.primary}
               />
 
               <TextInput
                 style={styles.inputText}
                 placeholder="Enter your email"
-                placeholderTextColor={Colors.placeholder}
+                placeholderTextColor={theme.placeholder}
                 value={email}
-                onChangeText={value => {
+                onChangeText={(value) => {
                   setEmail(value);
-                  setEmailError('');
+                 setEmailError("")
                 }}
-                onBlur={() => validateEmail(email)}
+                onBlur={()=>{ validateEmail(email);}}
                 keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
               />
             </View>
 
-            {emailError ? (
-              <Text style={styles.errorText}>{emailError}</Text>
+            {EmailError ? (
+              <Text style={styles.errorText}>
+                {EmailError}
+              </Text>
             ) : null}
 
-            {/* PASSWORD */}
-            <Text style={styles.label}>Password</Text>
+            {/* Password */}
+            <Text style={styles.label}>
+              Password
+            </Text>
 
             <View style={styles.inputContainer}>
               <Ionicons
                 name="lock-closed-outline"
-                size={21}
-                color={Colors.primary}
+                size={20}
+                color={theme.primary}
               />
 
               <TextInput
                 style={styles.inputText}
                 placeholder="Enter your password"
-                placeholderTextColor={Colors.placeholder}
+                placeholderTextColor={theme.placeholder}
                 value={pass}
-                onChangeText={value => {
+                onChangeText={(value) => {
                   setPass(value);
-                  setPassError('');
-                }}
-                onBlur={() => validatePassword(pass)}
+                  SetPassError("");
+                }} onBlur={()=>{validatePassword(pass)}}
                 secureTextEntry={!showPass}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="done"
-                onSubmitEditing={checkUser}
               />
 
               <Pressable
-                onPress={() => setShowPass(previous => !previous)}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  showPass ? 'Hide password' : 'Show password'
-                }
+                onPress={() => setShowPass(!showPass)}
               >
                 <Ionicons
-                  name={showPass ? 'eye-outline' : 'eye-off-outline'}
-                  size={22}
-                  color={Colors.primary}
+                  name={
+                    showPass
+                      ? "eye"
+                      : "eye-off"
+                  }
+                  size={20}
+                  color={theme.primary}
                 />
               </Pressable>
             </View>
 
-            {passError ? (
-              <Text style={styles.errorText}>{passError}</Text>
+            {PassError ? (
+              <Text style={styles.errorText}>
+                {PassError}
+              </Text>
             ) : null}
 
-            {/* SIGN IN BUTTON */}
-            <Pressable
-              style={[
-                styles.button,
-                loading && styles.disabledButton,
-              ]}
-              onPress={checkUser}
-              disabled={loading}
+            {/* Button */}
+            {loading ? (
+              <View style={styles.loader}>
+                <ActivityIndicator
+                  size="small"
+                  color={theme.primary}
+                />
+              </View>
+            ) : (
+              <Pressable
+                style={styles.button}
+                onPress={() =>
+                  checkUser(email, pass)
+                }
+              >
+                <Text style={styles.buttonText}>
+                  Sign In
+                </Text>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Sign Up */}
+          <Text style={styles.signup}>
+            Don't have an account?{" "}
+            <Text
+              style={styles.signupLink}
+              onPress={() =>
+                navigation.replace("SignUp")
+              }
             >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
-              )}
-            </Pressable>
-          </View>
-
-          {/* SIGN UP LINK */}
-          <View style={styles.signup}>
-            <Text style={styles.signupText}>
-              Don't have an account?
+              Sign Up
             </Text>
+          </Text>
 
-            <Pressable onPress={() => navigation.replace('SignUp')}>
-              <Text style={styles.signupLink}>Sign Up</Text>
-            </Pressable>
-          </View>
+          {/* All Fields Alert */}
+          <ConfirmAlert
+            visible={Aalert}
+            title="Error"
+            Message="All Fields are required"
+            onConfirm={() => {
+              AshowAlert(false);
+            }}
+          />
+
+          {/* Invalid Credentials Alert */}
+          <ConfirmAlert
+            visible={alertPass}
+            title="Error"
+            Message="Invalid Email and Password"
+            onConfirm={() => {
+              setAlertPass(false);
+            }}
+          />
+
+          {/* Unexpected Error Alert */}
+          <ConfirmAlert
+            visible={errorAlert}
+            title="Error"
+            Message="Something went wrong during sign in"
+            onConfirm={() => {
+              setErrorAlert(false);
+            }}
+          />
+
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-// COLORS
-const Colors = {
-  background: '#FFFFFF',
-  primary: '#292929',
-  gold: '#C9A227',
-  text: '#292929',
-  placeholder: '#999999',
-  border: '#DDDDDD',
-  card: '#FFFFFF',
-  error: '#D32F2F',
-  secondaryText: '#666666',
-  button: '#292929',
-};
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    keyboardView: {
+      flex: 1,
+      backgroundColor: theme.background,
+    },
 
-// STYLES
-const styles = StyleSheet.create({
-  keyboardView: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
+    scrollContent: {
+      flexGrow: 1,
+    },
 
-  scrollContent: {
-    flexGrow: 1,
-  },
+    container: {
+      flexGrow: 1,
+      paddingHorizontal: 25,
+      paddingTop: 45,
+      paddingBottom: 35,
+      justifyContent: "center",
+    },
 
-  container: {
-    flexGrow: 1,
-    paddingHorizontal: 25,
-    paddingTop: 35,
-    paddingBottom: 35,
-    justifyContent: 'center',
-  },
-
-  header: {
-    alignItems: 'center',
+  header: { alignItems: "center", 
     marginBottom: 35,
-    paddingHorizontal: 10,
-  },
+     paddingHorizontal: 10, },
 
-  logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
+ 
 
-  title: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: Colors.primary,
-    textAlign: 'center',
-    letterSpacing: 0.3,
-  },
+   title: { fontSize: 40, fontWeight: "900", 
+    color: theme.primary, fontFamily:"Poppins_600SemiBold",
+    textAlign: "center", letterSpacing: 0.3, },
 
-  subtitle: {
-    fontSize: 15,
-    color: Colors.secondaryText,
-    textAlign: 'center',
-    marginTop: 9,
-    lineHeight: 20,
-  },
+   subtitle: { fontSize: 15, color: theme.primary,
+     textAlign: "center", marginTop: 9, lineHeight: 20, },
 
-  form: {
-    width: '100%',
-  },
+    form: {
+      width: "100%",
+    },
 
-  label: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.primary,
-    marginBottom: 8,
-  },
+    label: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: theme.primary,
+      marginBottom: 7,
+    },
 
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 54,
-    backgroundColor: Colors.card,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    marginBottom: 6,
-  },
+    inputContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      height: 52,
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: theme.border,
+      borderRadius: 16,
+      paddingHorizontal: 15,
+      marginBottom: 5,
+    },
 
-  inputText: {
-    flex: 1,
-    marginLeft: 12,
-    fontSize: 15,
-    color: Colors.text,
-    paddingVertical: 10,
-  },
+    inputText: {
+      flex: 1,
+      marginLeft: 13,
+      fontSize: 15,
+      color: theme.text,
+    },
 
-  errorText: {
-    color: Colors.error,
-    fontSize: 12,
-    marginLeft: 4,
-    marginBottom: 14,
-  },
+    errorText: {
+      color: "#D32F2F",
+      fontSize: 12,
+      marginLeft: 4,
+      marginBottom: 14,
+    },
 
-  button: {
-    height: 53,
-    backgroundColor: Colors.button,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 15,
-    elevation: 3,
-  },
+    button: {
+      height: 53,
+      backgroundColor: theme.primary,
+      borderRadius: 16,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 4,
+      elevation: 3,
+    },
 
-  disabledButton: {
-    opacity: 0.7,
-  },
+    buttonText: {
+      color: "#FFFFFF",
+      fontSize: 16,
+      fontWeight: "700",
+    },
 
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
+    loader: {
+      height: 53,
+      justifyContent: "center",
+      alignItems: "center",
+    },
 
-  signup: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 25,
-  },
+    signup: {
+      textAlign: "center",
+      marginTop: 22,
+      color: theme.secondaryText,
+      fontSize: 14,
+    },
 
-  signupText: {
-    color: Colors.secondaryText,
-    fontSize: 14,
-  },
-
-  signupLink: {
-    color: Colors.primary,
-    fontWeight: '800',
-    fontSize: 14,
-    marginLeft: 5,
-  },
-});
+    signupLink: {
+      color: theme.primary,
+      fontWeight: "800",
+    },
+  });

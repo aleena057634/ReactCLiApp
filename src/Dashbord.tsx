@@ -44,51 +44,51 @@ export default function Dashboard() {
   const [orders, setOrders] = useState<any[]>([]);
   const [ImageAlert, showImageAlert] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-const navigation =useNavigation<any>();
+  const navigation = useNavigation<any>();
 
-const pickImage = () => {
-  launchImageLibrary(
-    {
-      mediaType: 'photo',
-      selectionLimit: 1,
-      quality: 1,
-    },
-    async response => {
-      if (response.didCancel || response.errorCode) {
-        return;
-      }
+  const pickImage = () => {
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 1,
+      },
+      async response => {
+        if (response.didCancel || response.errorCode) {
+          return;
+        }
 
-      const imageUri = response.assets?.[0]?.uri;
+        const imageUri = response.assets?.[0]?.uri;
 
-      if (imageUri) {
-        setProfileImage(imageUri);
-        await saveProfileImage(imageUri);
-      }
-    },
-  );
-};
+        if (imageUri) {
+          setProfileImage(imageUri);
+          await saveProfileImage(imageUri);
+        }
+      },
+    );
+  };
 
-const takePhoto = () => {
-  launchCamera(
-    {
-      mediaType: 'photo',
-      cameraType: 'back',
-      quality: 1,
-    },
-    async response => {
-      if (response.didCancel || response.errorCode) {
-        return;
-      }
+  const takePhoto = () => {
+    launchCamera(
+      {
+        mediaType: 'photo',
+        cameraType: 'back',
+        quality: 1,
+      },
+      async response => {
+        if (response.didCancel || response.errorCode) {
+          return;
+        }
 
-      const imageUri = response.assets?.[0]?.uri;
+        const imageUri = response.assets?.[0]?.uri;
 
-      if (imageUri) {
-        setProfileImage(imageUri);
-        await saveProfileImage(imageUri);
-      }
-    },
-  );
-};
+        if (imageUri) {
+          setProfileImage(imageUri);
+          await saveProfileImage(imageUri);
+        }
+      },
+    );
+  };
 
   const UrgentOrder = async () => {
     try {
@@ -228,7 +228,9 @@ const takePhoto = () => {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => navigation.navigate("/Setting")}
+            onPress={() => navigation.navigate("Setting", {
+              screen: "Setting"
+            })}
           >
             <Ionicons
               name="settings-outline"
@@ -463,8 +465,8 @@ const takePhoto = () => {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => navigation.navigate('Customers',{
-                 screen: "AddCustomer",
+            onPress={() => navigation.navigate('Customers', {
+              screen: "AddCustomer",
             })}
           >
             <View
@@ -501,10 +503,10 @@ const takePhoto = () => {
               },
             ]}
             onPress={() =>
-  navigation.navigate('Orders', {
-    screen: 'AddOrder',
-  })
-}
+              navigation.navigate('Orders', {
+                screen: 'AddOrder',
+              })
+            }
           >
             <View
               style={[
@@ -539,7 +541,7 @@ const takePhoto = () => {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => {}}
+            onPress={() => { navigation.navigate("Payment") }}
           >
             <View
               style={[
@@ -574,7 +576,9 @@ const takePhoto = () => {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => navigation.navigate("ListCustomerScreen")}
+            onPress={() => navigation.navigate('Customers', {
+              screen: "CustomerList"
+            })}
           >
             <View
               style={[
@@ -618,7 +622,9 @@ const takePhoto = () => {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => navigation.navigate("AddOrderScreen")}
+            onPress={() => navigation.navigate("OrderStackNavigation",{
+              screen:"AddOrder"
+            })}
           >
             <View
               style={[
@@ -662,7 +668,7 @@ const takePhoto = () => {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => navigation.navigate("Orders",{screen:"ListOrderScreen"})}
+            // onPress={() => navigation.navigate("Orders", { screen: "ListOrderScreen" })}
           >
             <View
               style={[
@@ -723,7 +729,9 @@ const takePhoto = () => {
               </View>
 
               <TouchableOpacity
-                onPress={() => navigation.navigate("Orders",{screen:"ListOrderScreen"})}
+                onPress={() => navigation.navigate
+                  ("OrderStackNavigation", 
+                    { screen: "ListOrderScreen" })}
               >
                 <Text
                   style={[
@@ -746,13 +754,20 @@ const takePhoto = () => {
                     borderColor: theme.border,
                   },
                 ]}
-               
-                onPress={() =>
-  navigation.navigate("DetailOrderScreen", {
-    orderId: order.ORDER_ID.toString(),
-  })
-}
+
+                
+              onPress={()=>{
+navigation.navigate("OrderStackNavigation",{
+  Screen:"DetailOrderScreen",
+ params: {
+orderId: order.ORDER_ID.toString(),
+  }
+})
+
+              }}
+
               >
+
                 <View
                   style={[
                     styles.orderIcon,

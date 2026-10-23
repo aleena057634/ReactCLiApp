@@ -32,9 +32,10 @@ export async function Customer_Table() {
       CREATE TABLE IF NOT EXISTS CUSTOMER (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
         NAME TEXT NOT NULL,
-        PHONE TEXT UNIQUE,
+        PHONE TEXT,
         ADDRESS TEXT,
-        USER_ID INTEGER
+        USER_ID INTEGER,
+        UNIQUE (PHONE, USER_ID)
       );
     `);
 

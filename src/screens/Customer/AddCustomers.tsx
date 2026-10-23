@@ -1,87 +1,187 @@
 
-import React, { useState } from 'react';
+import ThemeContext from "../../context/ThemeContext";
+import { Ionicons } from "@react-native-vector-icons/ionicons";
 import {
-  View,
-  Text,
-  ScrollView,
+  useNavigation,
+  useRoute,
+  RouteProp,
+} from '@react-navigation/native';
+import {
+  CustomButton,
+  ConfirmAlert,
+} from '../../components/CustomAlert';
+import { useContext, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Button,
   KeyboardAvoidingView,
   Platform,
-  TextInput,
+  ScrollView,
   StyleSheet,
-  Alert,
-  TouchableOpacity,
-} from 'react-native';
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-import Ionicons from '@react-native-vector-icons/ionicons';
 import {
-  
-  checkCustomerPhone,
-} from '../../database/queries';
-
-import { AddCustomer} from "../../database/CustomerCru"
+  AddCustomer,
+  updateCunstomer,
+} from "../../database/CustomerCru";
 
 export default function AddCustomers() {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { theme } = useContext(ThemeContext);
+type CustomerParams = {
+  ID?: string | number;
+  NAME?: string;
+  PHONE?: string;
+  ADDRESS?: string;
+};
 
-  const handleAddCustomer = async () => {
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      Alert.alert('Required Fields', 'Please fill all fields.');
-      return;
+const navigation = useNavigation<any>();
+const route = useRoute();
+
+const params = (route.params ?? {}) as CustomerParams;
+
+const { ID, NAME, PHONE, ADDRESS } = params;
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+
+  const [loader, setLoader] = useState(false);
+
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [addressError, setAddressError] = useState("");
+
+  const [AlertAll, setAlertALL] = useState(false);
+
+  useEffect(() => {
+    if (ID) {
+      setName(NAME?.toString() || "");
+      setPhone(PHONE?.toString() || "");
+      setAddress(ADDRESS?.toString() || "");
+    }
+  }, [ID, NAME, PHONE, ADDRESS]);
+
+  function showError(title: string, message: string) {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setShowAlert(true);
+  }
+
+  function validateName(value: string) {
+    const CName = value.trim();
+
+    if (!CName) {
+      setNameError("Name can't be empty");
+      return false;
     }
 
-    if (!/^[A-Za-z ]+$/.test(name.trim())) {
-      Alert.alert('Invalid Name', 'Name should contain letters only.');
-      return;
+    if (!/^[A-Za-z ]+$/.test(CName)) {
+      setNameError("Name can contain letters only");
+      return false;
     }
 
-    if (!/^(03\d{9}|\+923\d{9})$/.test(phone.trim())) {
-      Alert.alert(
-        'Invalid Phone',
-        'Enter a valid number, e.g. 03001234567 or +923001234567.',
-      );
+    setNameError("");
+    return true;
+  }
+
+  function validatePhone(value: string) {
+    const CPhone = value.trim();
+
+    if (!CPhone) {
+      setPhoneError("Phone can't be empty");
+      return false;
+    }
+
+    const phonePattern = /^(03\d{9}|\+923\d{9})$/;
+
+    if (!phonePattern.test(CPhone)) {
+      setPhoneError("Enter a valid phone number e.g. 03001234567");
+      return false;
+    }
+
+    setPhoneError("");
+    return true;
+  }
+
+  function validateAddress(value: string) {
+    const CAddress = value.trim();
+
+    if (!CAddress) {
+      setAddressError("Address can't be empty");
+      return false;
+    }
+
+    setAddressError("");
+    return true;
+  }
+
+  function handleValidation() {
+    if (!name.trim() && !phone.trim() && !address.trim()) {
+      setAlertALL(true);
+      return false;
+    }
+
+    const validName = validateName(name);
+    const validPhone = validatePhone(phone);
+    const validAddress = validateAddress(address);
+
+    return validName && validPhone && validAddress;
+  }
+
+  async function handleSave() {
+    if (!handleValidation()) {
       return;
     }
 
     try {
-      setLoading(true);
+      setLoader(true);
 
-      const phoneExists = await checkCustomerPhone(phone.trim());
-
-      if (phoneExists) {
-        Alert.alert(
-          'Phone Number Exists',
-          'This phone number is already registered. Please use another number.',
+      if (ID) {
+        await updateCunstomer(
+          Number(ID),
+          name.trim(),
+          phone.trim(),
+          address.trim()
         );
-        return;
+      } else {
+        await AddCustomer(
+          name.trim(),
+          phone.trim(),
+          address.trim()
+        );
       }
 
-      await AddCustomer(name.trim(), phone.trim(), address.trim());
-
-      Alert.alert('Success', 'Customer added successfully.', [
-        {
-          text: 'OK',
-          onPress: () => {
-            setName('');
-            setPhone('');
-            setAddress('');
-          },
-        },
-      ]);
+     navigation.replace("CustomerList");
     } catch (error) {
-      console.log('Add customer error:', error);
-      Alert.alert('Error', 'Unable to add customer. Please try again.');
-    } finally {
-      setLoading(false);
+      console.log("Customer save failed:", error);
+
+      setLoader(false);
+
+      showError(
+        "Error",
+        "Something went wrong"
+      );
     }
-  };
+  }
 
   return (
     <KeyboardAvoidingView
-      style={styles.keyboardView}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={[
+        styles.keyboardView,
+        { backgroundColor: theme.background },
+      ]}
+      behavior={
+        Platform.OS === "ios"
+          ? "padding"
+          : "height"
+      }
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -89,69 +189,244 @@ export default function AddCustomers() {
         contentContainerStyle={styles.content}
       >
         <View style={styles.form}>
+
+          {/* HEADER */}
+
           <View style={styles.header}>
-            <View style={styles.iconCircle}>
+            <View
+              style={[
+                styles.iconCircle,
+                { backgroundColor: theme.primary },
+              ]}
+            >
               <Ionicons
-                name="person-add-outline"
+                name={
+                  ID
+                    ? "create-outline"
+                    : "person-add-outline"
+                }
                 size={28}
-                color="#FFFFFF"
+                color={theme.white}
               />
             </View>
 
-            <Text style={styles.title}>Add Customer</Text>
-            <Text style={styles.subtitle}>Enter customer details</Text>
-          </View>
-
-          <Text style={styles.label}>Name</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="person-outline" size={20} color="#C9A227" />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter customer name"
-              placeholderTextColor="#999999"
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
-
-          <Text style={styles.label}>Phone</Text>
-          <View style={styles.inputContainer}>
-            <Ionicons name="call-outline" size={20} color="#C9A227" />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter phone number"
-              placeholderTextColor="#999999"
-              keyboardType="phone-pad"
-              value={phone}
-              onChangeText={setPhone}
-              maxLength={13}
-            />
-          </View>
-
-          <Text style={styles.label}>Address</Text>
-          <View style={styles.addressContainer}>
-            <Ionicons name="location-outline" size={20} color="#C9A227" />
-            <TextInput
-              style={styles.addressInput}
-              placeholder="Enter customer address"
-              placeholderTextColor="#999999"
-              multiline
-              value={address}
-              onChangeText={setAddress}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.buttonContainer}
-            onPress={handleAddCustomer}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? 'Saving...' : 'Add Customer'}
+            <Text
+              style={[
+                styles.title,
+                { color: theme.text },
+              ]}
+            >
+              {ID
+                ? "Update Customer"
+                : "Add Customer"}
             </Text>
-          </TouchableOpacity>
+
+            <Text
+              style={[
+                styles.subtitle,
+                { color: theme.secondaryText },
+              ]}
+            >
+              {ID
+                ? "Update customer details"
+                : "Enter customer details"}
+            </Text>
+          </View>
+
+          {/* NAME */}
+
+          <Text
+            style={[
+              styles.label,
+              { color: theme.text },
+            ]}
+          >
+            Name
+          </Text>
+
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="person-outline"
+              size={20}
+              color={theme.primary}
+            />
+
+            <TextInput
+              style={[
+                styles.input,
+                { color: theme.text },
+              ]}
+              placeholder="Enter customer name"
+              placeholderTextColor={theme.placeholder}
+              value={name}
+              onChangeText={(value) => {
+                setName(value);
+                setNameError("");
+              }}
+              onBlur={() => {
+                validateName(name);
+              }}
+            />
+          </View>
+
+          {nameError ? (
+            <Text style={styles.errorText}>
+              {nameError}
+            </Text>
+          ) : null}
+
+          {/* PHONE */}
+
+          <Text
+            style={[
+              styles.label,
+              { color: theme.text },
+            ]}
+          >
+            Phone
+          </Text>
+
+          <View
+            style={[
+              styles.inputContainer,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="call-outline"
+              size={20}
+              color={theme.primary}
+            />
+
+            <TextInput
+              style={[
+                styles.input,
+                { color: theme.text },
+              ]}
+              placeholder="Enter phone number"
+              placeholderTextColor={theme.placeholder}
+              value={phone}
+              onChangeText={(value) => {
+                setPhone(value);
+                setPhoneError("");
+              }}
+              onBlur={() => {
+                validatePhone(phone);
+              }}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          {phoneError ? (
+            <Text style={styles.errorText}>
+              {phoneError}
+            </Text>
+          ) : null}
+
+          {/* ADDRESS */}
+
+          <Text
+            style={[
+              styles.label,
+              { color: theme.text },
+            ]}
+          >
+            Address
+          </Text>
+
+          <View
+            style={[
+              styles.addressContainer,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}
+          >
+            <Ionicons
+              name="location-outline"
+              size={20}
+              color={theme.primary}
+            />
+
+            <TextInput
+              style={[
+                styles.addressInput,
+                { color: theme.text },
+              ]}
+              placeholder="Enter customer address"
+              placeholderTextColor={theme.placeholder}
+              value={address}
+              onChangeText={(value) => {
+                setAddress(value);
+                setAddressError("");
+              }}
+              onBlur={() => {
+                validateAddress(address);
+              }}
+              multiline
+            />
+          </View>
+
+          {addressError ? (
+            <Text style={styles.errorText}>
+              {addressError}
+            </Text>
+          ) : null}
+
+    
+
+          {/* BUTTON */}
+
+          {loader ? (
+            <ActivityIndicator
+              size="large"
+              color={theme.primary}
+              style={styles.loader}
+            />
+          ) : (
+            <View style={styles.buttonContainer}>
+              <CustomButton
+                title={ID ? "Update" : "Add"}
+                onPress={handleSave}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      {/* ERROR ALERT */}
+
+      <ConfirmAlert
+        visible={showAlert}
+        title={alertTitle}
+        Message={alertMessage}
+        onConfirm={() => {
+          setShowAlert(false);
+        }}
+      />
+
+      {/* ALL FIELDS ALERT */}
+
+      <ConfirmAlert
+        visible={AlertAll}
+        title="Required"
+        Message="All fields required"
+        onConfirm={() => {
+          setAlertALL(false);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -159,94 +434,97 @@ export default function AddCustomers() {
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
+
   content: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 25,
     paddingBottom: 50,
   },
+
   form: {
-    width: '100%',
+    width: "100%",
     maxWidth: 450,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
+
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
   },
+
   iconCircle: {
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: '#C9A227',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 14,
   },
+
   title: {
     fontSize: 26,
-    fontWeight: '800',
-    color: '#160909',
+    fontWeight: "800",
   },
+
   subtitle: {
     fontSize: 14,
-    color: '#777777',
     marginTop: 6,
   },
+
   label: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#160909',
+    fontWeight: "700",
     marginBottom: 8,
   },
+
   inputContainer: {
     height: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#EEEEEE',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 14,
-    marginBottom: 20,
+    marginBottom: 5,
   },
+
   input: {
     flex: 1,
     marginLeft: 12,
     fontSize: 15,
-    color: '#160909',
   },
+
   addressContainer: {
     minHeight: 100,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#EEEEEE',
+    flexDirection: "row",
+    alignItems: "flex-start",
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingTop: 14,
   },
+
   addressInput: {
     flex: 1,
     marginLeft: 12,
     fontSize: 15,
-    color: '#160909',
     minHeight: 75,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
-  buttonContainer: {
-    backgroundColor: '#C9A227',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
+
+  errorText: {
+    color: "#D32F2F",
+    fontSize: 12,
+    marginBottom: 14,
+    marginLeft: 4,
+  },
+
+  loader: {
     marginTop: 20,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+
+  buttonContainer: {
+    marginTop: 20,
   },
 });

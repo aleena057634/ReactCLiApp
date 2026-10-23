@@ -246,14 +246,14 @@ setDeletedid(null)
 
             <View style={styles.cardHeader}>
               <View style={styles.nameContainer}>
-                <Text
+                {/* <Text
                   style={[
                     styles.orderName,
                     { color: theme.text },
                   ]}
                 >
                   {item.ORDER_NAME || "Unnamed Order"}
-                </Text>
+                </Text> */}
 
                 <Text
                   style={[
