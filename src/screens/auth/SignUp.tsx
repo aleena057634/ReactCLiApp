@@ -1,4 +1,4 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useContext, useEffect, useState } from "react";
@@ -27,7 +27,7 @@ import {
   checkEmail,
   showUsers,
 } from "../../database/queries";
-
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { userTable } from "../../database/table";
 import { ConfirmAlert } from "../../components/CustomAlert";
 

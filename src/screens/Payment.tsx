@@ -19,7 +19,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import SearchBar from "../components/SearchBox";
 import CustomAlert, { ConfirmAlert } from "../components/CustomAlert";
-
+import Ionicons from '@react-native-vector-icons/ionicons';
 export default function Payment() {
   const { theme } = useContext(ThemeContext);
 

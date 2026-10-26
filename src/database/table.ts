@@ -1,6 +1,6 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import  databaseConnection  from '../database/DatabaseConnection';
+import databaseConnection from '../database/DatabaseConnection';
 
 // Create Users Table
 export async function userTable() {
@@ -83,18 +83,100 @@ export async function Measurement_table() {
   }
 }
 
-// Drop Measurement Table
-// export async function dropMeasurementTable() {
-//   try {
-//     const db = await databaseConnection;
+// RelationShip table create 
+export async function RelationShipTable() {
+  try {
+    const db = await databaseConnection;
+    await db.executeSql(`
+    CREATE TABLE IF NOT EXISTS Relation_Table (
+    Relation_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CUSTOMER_ID INTEGER NOT NULL,
+    NAME TEXT NOT NULL,
+    RELATION TEXT NOT NULL,
+    FOREIGN KEY (CUSTOMER_ID) REFERENCES Customer_Table(ID)
+);`)
+   
 
-//     await db.executeSql('DROP TABLE IF EXISTS MEASUREMENTS;');
+  } catch (error) {
 
-//     console.log('MEASUREMENTS table dropped successfully');
-//   } catch (error) {
-//     console.log('Failed to drop MEASUREMENTS table:', error);
-//   }
-// }
+  }
+}
+export async function InsertRelation(
+  customerId: number,
+  name: string,
+  relation: string,
+) {
+  try {
+    const db = await databaseConnection;
+
+    await db.executeSql(
+      `INSERT INTO Relation_Table
+       (CUSTOMER_ID, NAME, RELATION)
+       VALUES (?, ?, ?)`,
+      [customerId, name, relation],
+    );
+
+    return true;
+  } catch (error) {
+    console.log('Insert Relation Error:', error);
+    return false;
+  }
+}
+// display data
+export async function GetRelations(customerId: number) {
+  const db = await databaseConnection;
+
+  const [results] = await db.executeSql(
+    'SELECT * FROM Relation_Table WHERE CUSTOMER_ID = ?',
+    [customerId],
+  );
+
+  const data = [];
+
+  for (let i = 0; i < results.rows.length; i++) {
+    data.push(results.rows.item(i));
+  }
+
+  return data;
+}
+
+export async function UpdateRelation(
+  relationId: number,
+  name: string,
+  relation: string,
+) {
+  try {
+    const db = await databaseConnection;
+
+    await db.executeSql(
+      `UPDATE Relation_Table
+       SET NAME = ?, RELATION = ?
+       WHERE Relation_ID = ?`,
+      [name, relation, relationId],
+    );
+
+    return true;
+  } catch (error) {
+    console.log('Update Relation Error:', error);
+    return false;
+  }
+}
+
+export async function DeleteRelation(relationId: number) {
+  try {
+    const db = await databaseConnection;
+
+    await db.executeSql(
+      'DELETE FROM Relation_Table WHERE Relation_ID = ?',
+      [relationId],
+    );
+
+    return true;
+  } catch (error) {
+    console.log('Delete Relation Error:', error);
+    return false;
+  }
+}
 
 // Get Current User Detail
 export async function getCurrentUserDetail() {

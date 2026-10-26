@@ -1,5 +1,5 @@
 import ThemeContext from "../../context/ThemeContext";
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useNavigation } from "@react-navigation/native";
 import { useContext, useState } from "react";
 import {

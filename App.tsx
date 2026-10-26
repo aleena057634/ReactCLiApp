@@ -16,7 +16,7 @@ import ThemeContext from './src/context/ThemeContext';
 
 import {
   userTable,
-  Customer_Table,
+  Customer_Table,RelationShipTable
 } from './src/database/table';
 import { Payment_Value,payment_table} from './src/database/payment';
 import { order_Table } from './src/database/order';
@@ -131,6 +131,7 @@ export default function App() {
         await order_Table();
 payment_table();
 Order_Image();
+RelationShipTable();
 
         setDatabaseReady(true);
       } catch (error) {

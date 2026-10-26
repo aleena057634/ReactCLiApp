@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, Image } from 'react-native'
 import React, { useCallback, useContext, useState } from 'react'
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { getCurrentUserDetail } from "../../database/table"
 import { getProfileImage } from '../../database/ImageCrud';
 import ThemeContext from '../../context/ThemeContext'; 

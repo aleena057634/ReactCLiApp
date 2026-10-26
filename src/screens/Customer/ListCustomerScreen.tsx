@@ -14,7 +14,7 @@ import {
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
-import Ionicons from "react-native-vector-icons/Ionicons";
+
 import {
   useNavigation,
   useFocusEffect,
@@ -28,7 +28,7 @@ import {
   DeleteCustomer,
   getCustomers,
 } from "../../database/CustomerCru";
-
+import Ionicons from '@react-native-vector-icons/ionicons';
 type Customer = {
   ID: number;
   NAME: string;

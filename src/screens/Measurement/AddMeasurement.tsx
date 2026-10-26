@@ -11,7 +11,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 import ThemeContext from "../../context/ThemeContext";
-
+import Ionicons from '@react-native-vector-icons/ionicons';
 export default function AddMeasurement() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();

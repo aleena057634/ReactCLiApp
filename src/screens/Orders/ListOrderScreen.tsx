@@ -1,6 +1,5 @@
 
-
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useCallback, useState } from "react";
 
 import FloatingButton from "../../components/FloatingButton";

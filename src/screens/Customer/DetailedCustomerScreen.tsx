@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StyleSheet } from 'react-native';
 import ThemeContext from '../../context/ThemeContext';
@@ -345,6 +345,72 @@ export default function CustomerScreen() {
             ]}
           >
             View or add customer measurements
+          </Text>
+        </View>
+
+        <View
+          style={[
+            styles.arrowCircle,
+            { backgroundColor: theme.inputBackground },
+          ]}
+        >
+          <Ionicons
+            name="chevron-forward"
+            size={19}
+            color={theme.primary}
+          />
+        </View>
+      </TouchableOpacity>
+
+      {/* Relation  */}
+       <TouchableOpacity
+        style={[
+          styles.serviceCard,
+          {
+            backgroundColor: theme.card,
+            borderColor: theme.border,
+          },
+        ]}
+        onPress={() => {
+          navigation.navigate('MeasurementStack', {
+            screen: 'AddfamilyMeasurement',
+            params: {
+              id: String(customer?.ID ?? id),
+            },
+          });
+        }}
+        activeOpacity={0.8}
+      >
+        <View
+          style={[
+            styles.serviceIcon,
+            { backgroundColor: theme.inputBackground },
+          ]}
+        >
+          <Ionicons
+            name="body-outline"
+            size={27}
+            color={theme.primary}
+          />
+        </View>
+
+        <View style={styles.serviceContent}>
+          <Text
+            style={[
+              styles.serviceTitle,
+              { color: theme.text },
+            ]}
+          >
+            Add Family Members
+          </Text>
+
+          <Text
+            style={[
+              styles.serviceSubtitle,
+              { color: theme.secondaryText },
+            ]}
+          >
+            View or add Measurement of family
           </Text>
         </View>
 

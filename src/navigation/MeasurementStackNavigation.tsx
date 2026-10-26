@@ -5,6 +5,7 @@ import AddMeasurement from '../screens/Measurement/AddMeasurement';
 import MeasurementForm from '../screens/Measurement/MeasurementForm';
 import MeasurementList from '../screens/Measurement/MeasurementList';
 import ThemeContext from '../context/ThemeContext';
+import Relation from '../screens/Measurement/Relation';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +42,12 @@ export default function MeasurementStackNavigation() {
         component={AddMeasurement}
         options={{ title: 'Measurement Type' }}
       />
+ <Stack.Screen
+        name="AddfamilyMeasurement"
+        component={Relation}
+        options={{ title: 'Add Family members ' }}
+      />
+
     </Stack.Navigator>
   );
 }
