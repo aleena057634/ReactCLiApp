@@ -1,8 +1,7 @@
 
+import databaseConnection from "./DatabaseConnection";
 
-import databaseConnection from './DatabaseConnection';
-
-// Add Measurement
+// ADD MEASUREMENT
 export async function addMeasurement(
   customerId: number,
   type: string,
@@ -11,22 +10,44 @@ export async function addMeasurement(
   try {
     const db = await databaseConnection;
 
-    const [result] = await db.executeSql(
+    await db.executeSql(
       `INSERT INTO MEASUREMENTS (
-        CUSTOMER_ID, TYPE, CHEST, WAIST, QAMEEZ_LENGTH,
-        SHIRT_LENGTH, SHALWAR_LENGTH, TROUSER_LENGTH,
-        SLEEVE, DAMAN, HIP, THIGH, BOTTOM, SHOULDER,
-        COLLAR, LENGTH, ARMHOLE, NOTES
+        CUSTOMER_ID,
+        TYPE,
+        CHEST,
+        WAIST,
+        QAMEEZ_LENGTH,
+        SHIRT_LENGTH,
+        SHALWAR_LENGTH,
+        TROUSER_LENGTH,
+        SLEEVE,
+        DAMAN,
+        HIP,
+        THIGH,
+        BOTTOM,
+        SHOULDER,
+        COLLAR,
+        LENGTH,
+        ARMHOLE,
+        NOTES
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         customerId,
         type,
         measurement.Chest ? Number(measurement.Chest) : null,
         measurement.Waist ? Number(measurement.Waist) : null,
-        measurement.Qameez_Length ? Number(measurement.Qameez_Length) : null,
-        measurement.Shirt_Length ? Number(measurement.Shirt_Length) : null,
-        measurement.Shalwar_Length ? Number(measurement.Shalwar_Length) : null,
-        measurement.Trouser_Length ? Number(measurement.Trouser_Length) : null,
+        measurement.Qameez_Length
+          ? Number(measurement.Qameez_Length)
+          : null,
+        measurement.Shirt_Length
+          ? Number(measurement.Shirt_Length)
+          : null,
+        measurement.Shalwar_Length
+          ? Number(measurement.Shalwar_Length)
+          : null,
+        measurement.Trouser_Length
+          ? Number(measurement.Trouser_Length)
+          : null,
         measurement.Sleeve ? Number(measurement.Sleeve) : null,
         measurement.Daman ? Number(measurement.Daman) : null,
         measurement.Hip ? Number(measurement.Hip) : null,
@@ -40,46 +61,42 @@ export async function addMeasurement(
       ]
     );
 
-    console.log('Measurement added. ID:', result.insertId);
-    return result.insertId;
+    console.log("Measurement added successfully");
+    return true;
   } catch (error) {
-    console.log('Failed to add measurement:', error);
+    console.log("FAILED TO ADD MEASUREMENT:", error);
     throw error;
   }
 }
 
-// Get Measurements by Customer ID
+// GET MEASUREMENTS BY CUSTOMER ID
 export async function getMeasurements(customerId: number) {
   try {
     const db = await databaseConnection;
 
-    const [result] = await db.executeSql(
+    const [results] = await db.executeSql(
       `SELECT *
        FROM MEASUREMENTS
-       WHERE CUSTOMER_ID = ?
-       ORDER BY MEASUREMENT_ID DESC`,
+       WHERE CUSTOMER_ID = ?`,
       [customerId]
     );
 
     const data = [];
 
-    for (let i = 0; i < result.rows.length; i++) {
-      data.push(result.rows.item(i));
+    for (let i = 0; i < results.rows.length; i++) {
+      data.push(results.rows.item(i));
     }
 
-    console.log('Measurements data:', data);
+    console.log("MEASUREMENTS DATA:", data);
+
     return data;
   } catch (error) {
-    console.log('Failed to get measurements:', error);
+    console.log("FAILED TO GET MEASUREMENTS:", error);
     throw error;
   }
 }
 
-
-// Get Measurements by Customer ID
-
-
-// Update Measurement
+// UPDATE MEASUREMENT
 export async function updateMeasurement(
   measurementId: number,
   measurement: any
@@ -87,7 +104,7 @@ export async function updateMeasurement(
   try {
     const db = await databaseConnection;
 
-    const [result] = await db.executeSql(
+    await db.executeSql(
       `UPDATE MEASUREMENTS SET
         CHEST = ?,
         WAIST = ?,
@@ -105,14 +122,22 @@ export async function updateMeasurement(
         LENGTH = ?,
         ARMHOLE = ?,
         NOTES = ?
-       WHERE MEASUREMENT_ID = ?`,
+      WHERE MEASUREMENT_ID = ?`,
       [
         measurement.Chest ? Number(measurement.Chest) : null,
         measurement.Waist ? Number(measurement.Waist) : null,
-        measurement.Qameez_Length ? Number(measurement.Qameez_Length) : null,
-        measurement.Shirt_Length ? Number(measurement.Shirt_Length) : null,
-        measurement.Shalwar_Length ? Number(measurement.Shalwar_Length) : null,
-        measurement.Trouser_Length ? Number(measurement.Trouser_Length) : null,
+        measurement.Qameez_Length
+          ? Number(measurement.Qameez_Length)
+          : null,
+        measurement.Shirt_Length
+          ? Number(measurement.Shirt_Length)
+          : null,
+        measurement.Shalwar_Length
+          ? Number(measurement.Shalwar_Length)
+          : null,
+        measurement.Trouser_Length
+          ? Number(measurement.Trouser_Length)
+          : null,
         measurement.Sleeve ? Number(measurement.Sleeve) : null,
         measurement.Daman ? Number(measurement.Daman) : null,
         measurement.Hip ? Number(measurement.Hip) : null,
@@ -127,28 +152,29 @@ export async function updateMeasurement(
       ]
     );
 
-    console.log('Measurement updated successfully');
-    return result.rowsAffected > 0;
+    console.log("Measurement updated successfully");
+    return true;
   } catch (error) {
-    console.log('Failed to update measurement:', error);
-    throw error;
+    console.log("FAILED TO UPDATE MEASUREMENT:", error);
+    return false;
   }
 }
 
-// Delete Measurement
+// DELETE MEASUREMENT
 export async function deleteMeasurement(measurementId: number) {
   try {
     const db = await databaseConnection;
 
     const [result] = await db.executeSql(
-      'DELETE FROM MEASUREMENTS WHERE MEASUREMENT_ID = ?',
+      `DELETE FROM MEASUREMENTS WHERE MEASUREMENT_ID = ?`,
       [measurementId]
     );
 
-    console.log('Measurement deleted successfully');
+    console.log("DELETE RESULT:", result.rowsAffected);
+
     return result.rowsAffected > 0;
   } catch (error) {
-    console.log('Failed to delete measurement:', error);
-    throw error;
+    console.log("DELETE ERROR:", error);
+    return false;
   }
 }

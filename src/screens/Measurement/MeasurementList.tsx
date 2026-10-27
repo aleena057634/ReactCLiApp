@@ -1,12 +1,7 @@
-import Ionicons from "@react-native-vector-icons/ionicons";
-// import {
-//   router,
-//   useFocusEffect,
-//   useLocalSearchParams,
-// } from "expo-router";
-import { useRoute,useFocusEffect,useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@react-native-vector-icons/ionicons";
 
-
+import { useRoute,useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useContext, useState } from "react";
 import {
   FlatList,
@@ -16,8 +11,8 @@ import {
   View,
 } from "react-native";
 
-import FloatingButton from "../../components/FloatingButton"
-import CustomAlert from "../../components/CustomAlert";
+import FloatingButton from "../../components/FloatingButton";
+import CustomAlert from "../../components/CustomAlert"; 
 import ThemeContext from "../../context/ThemeContext";
 
 import {
@@ -26,11 +21,10 @@ import {
 } from "../../database/MeasuremenrCruc";
 
 export default function MeasurementList() {
-const navigation = useNavigation<any>();
-const route = useRoute<any>();
-
-const { theme } = useContext(ThemeContext);
-const { id } = route.params;
+  const route=useRoute<any>(); 
+  const navigation=useNavigation<any>()
+  const { theme } = useContext(ThemeContext);
+  const { id } = route.params;
 
   const [showEditAlert, setShowEditAlert] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
@@ -63,42 +57,57 @@ const { id } = route.params;
   };
 
   const confirmUpdate = () => {
-    if (editItem) {
-     navigation.navigate('MeasurementForm', {
-  id: String(id),
-  type: String(editItem.TYPE),
-  measurementId: String(editItem.mEASUREMENT_ID),
+  if (editItem) {
+    navigation.navigate("MeasurementForm", {
+      id: String(id),
+      type: String(editItem.TYPE),
+      measurementId: String(editItem.MEASUREMENT_ID),
 
-  Chest: String(editItem.CHEST ?? ''),
-  Waist: String(editItem.WAIST ?? ''),
-  Qameez_Length: String(editItem.QAMEEZ_LENGTH ?? ''),
-  Shirt_Length: String(editItem.SHIRT_LENGTH ?? ''),
-  Shalwar_Length: String(editItem.SHALWAR_LENGTH ?? ''),
-  Trouser_Length: String(editItem.TROUSER_LENGTH ?? ''),
-  Sleeve: String(editItem.SLEEVE ?? ''),
-  Daman: String(editItem.DAMAN ?? ''),
-  Hip: String(editItem.HIP ?? ''),
-  Thigh: String(editItem.THIGH ?? ''),
-  Bottom: String(editItem.BOTTOM ?? ''),
-  Shoulder: String(editItem.SHOULDER ?? ''),
-  Armhole: String(editItem.ARMHOLE ?? ''),
-  Collar: String(editItem.COLLAR ?? ''),
-  Length: String(editItem.LENGTH ?? ''),
-  Notes: String(editItem.NOTES ?? ''),
-});
+      Chest: editItem.CHEST != null ? String(editItem.CHEST) : "",
+      Waist: editItem.WAIST != null ? String(editItem.WAIST) : "",
 
-setShowEditAlert(false);
-setEditItem(null);;
+      Qameez_Length:
+        editItem.QAMEEZ_LENGTH != null
+          ? String(editItem.QAMEEZ_LENGTH)
+          : "",
 
-      setShowEditAlert(false);
-      setEditItem(null);
-    }
-  };
+      Shirt_Length:
+        editItem.SHIRT_LENGTH != null
+          ? String(editItem.SHIRT_LENGTH)
+          : "",
+
+      Shalwar_Length:
+        editItem.SHALWAR_LENGTH != null
+          ? String(editItem.SHALWAR_LENGTH)
+          : "",
+
+      Trouser_Length:
+        editItem.TROUSER_LENGTH != null
+          ? String(editItem.TROUSER_LENGTH)
+          : "",
+
+      Sleeve: editItem.SLEEVE != null ? String(editItem.SLEEVE) : "",
+      Daman: editItem.DAMAN != null ? String(editItem.DAMAN) : "",
+      Hip: editItem.HIP != null ? String(editItem.HIP) : "",
+      Thigh: editItem.THIGH != null ? String(editItem.THIGH) : "",
+      Bottom: editItem.BOTTOM != null ? String(editItem.BOTTOM) : "",
+      Shoulder:
+        editItem.SHOULDER != null ? String(editItem.SHOULDER) : "",
+      Armhole: editItem.ARMHOLE != null ? String(editItem.ARMHOLE) : "",
+      Collar: editItem.COLLAR != null ? String(editItem.COLLAR) : "",
+      Length: editItem.LENGTH != null ? String(editItem.LENGTH) : "",
+      Notes: editItem.NOTES != null ? String(editItem.NOTES) : "",
+    });
+
+    setShowEditAlert(false);
+    setEditItem(null);
+  }
+};
 
   // ================= DELETE =================
 
   const handleDelete = (item: any) => {
-    setDeleteId(Number(item.mEASUREMENT_ID));
+    setDeleteId(Number(item.MEASUREMENT_ID));
     setShowAlert(true);
   };
 
@@ -110,7 +119,7 @@ setEditItem(null);;
         setMeasurements((prev) =>
           prev.filter(
             (item) =>
-              Number(item.mEASUREMENT_ID) !== Number(deleteId)
+              Number(item.MEASUREMENT_ID) !== Number(deleteId)
           )
         );
 
@@ -177,7 +186,7 @@ setEditItem(null);;
       <FlatList
         data={measurements}
         keyExtractor={(item) =>
-          String(item.mEASUREMENT_ID)
+          String(item.MEASUREMENT_ID)
         }
         showsVerticalScrollIndicator={false}
         contentContainerStyle={
@@ -266,7 +275,7 @@ setEditItem(null);;
                       { color: theme.secondaryText },
                     ]}
                   >
-                    Measurement #{item.mEASUREMENT_ID}
+                    Measurement #{item.MEASUREMENT_ID}
                   </Text>
                 </View>
               </View>
@@ -850,9 +859,9 @@ setEditItem(null);;
       />
 
       {/* ================= ADD BUTTON ================= */}
-     <FloatingButton
+      <FloatingButton
   onPress={() => {
-    navigation.navigate('AddMeasurement', {
+    navigation.navigate("AddMeasurement", {
       id: String(id),
     });
   }}

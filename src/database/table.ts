@@ -55,6 +55,7 @@ export async function Measurement_table() {
       CREATE TABLE IF NOT EXISTS MEASUREMENTS (
         MEASUREMENT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
         CUSTOMER_ID INTEGER NOT NULL,
+        RELATION_ID INTEGER DEFAULT NULL,
         TYPE TEXT NOT NULL,
         MEASUREMENT_NAME TEXT,
         CHEST REAL,
@@ -77,9 +78,30 @@ export async function Measurement_table() {
       );
     `);
 
-    console.log('MEASUREMENTS table created successfully');
+    // Check whether RELATION_ID already exists
+    const [result] = await db.executeSql(
+      'PRAGMA table_info(MEASUREMENTS)'
+    );
+
+    let relationColumnExists = false;
+
+    for (let i = 0; i < result.rows.length; i++) {
+      if (result.rows.item(i).name === 'RELATION_ID') {
+        relationColumnExists = true;
+        break;
+      }
+    }
+
+    // Add column to an existing table without deleting data
+    if (!relationColumnExists) {
+      await db.executeSql(
+        'ALTER TABLE MEASUREMENTS ADD COLUMN RELATION_ID INTEGER DEFAULT NULL'
+      );
+    }
+
+    console.log('MEASUREMENTS table ready with RELATION_ID');
   } catch (error) {
-    console.log('Failed to create Measurement table:', error);
+    console.log('Failed to create/update Measurement table:', error);
   }
 }
 
@@ -308,4 +330,18 @@ export async function ChangePassword(password: string) {
     console.log('Failed to update password:', error);
     throw error;
   }
+}
+
+export async function DropMeasurementTable(){
+  const db=await databaseConnection;
+try {
+   await db.executeSql(
+    `Drop table MEASUREMENTS if exists
+    `
+
+  )
+  console.log("Sucess delete measurement")
+} catch (error) {
+  console.log("falied to delete")
+}
 }

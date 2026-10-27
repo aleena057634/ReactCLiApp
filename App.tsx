@@ -16,7 +16,8 @@ import ThemeContext from './src/context/ThemeContext';
 
 import {
   userTable,
-  Customer_Table,RelationShipTable
+  Customer_Table,RelationShipTable,
+DropMeasurementTable,
 } from './src/database/table';
 import { Payment_Value,payment_table} from './src/database/payment';
 import { order_Table } from './src/database/order';
@@ -129,9 +130,9 @@ export default function App() {
         await userTable();
         await Customer_Table();
         await order_Table();
-payment_table();
-Order_Image();
-RelationShipTable();
+await payment_table();
+ await Order_Image();
+ await RelationShipTable();  DropMeasurementTable();
 
         setDatabaseReady(true);
       } catch (error) {

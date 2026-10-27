@@ -392,15 +392,15 @@ return (
           </View>
 
           {/* Measurement */}
-          <TouchableOpacity
+          
+<TouchableOpacity
   style={styles.measurementButton}
   onPress={() =>
     navigation.navigate('MeasurementStack', {
       screen: 'AddMeasurement',
       params: {
-        relationId: item.Relation_ID,
-        memberName: item.NAME,
-        customerId: Number(Customer_id),
+        id: String(Customer_id),
+        relationId: String(item.Relation_ID),
       },
     })
   }
@@ -411,6 +411,7 @@ return (
     color={theme.primary}
   />
 </TouchableOpacity>
+
 
           {/* Edit */}
           <TouchableOpacity

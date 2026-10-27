@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>StitchMate Order Receipt</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      color: #172B34;
+      font-size: 14px;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #C9A227;
+      padding-bottom: 14px;
+    }
+
+    h1 {
+      color: #164E63;
+      margin-bottom: 4px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-top: 22px;
+    }
+
+    .details {
+      margin-top: 24px;
+    }
+
+    .row {
+      padding: 12px 0;
+      border-bottom: 1px solid #dddddd;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    .footer {
+      margin-top: 35px;
+      text-align: center;
+      font-size: 12px;
+      color: #666666;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>StitchMate</h1>
+    <p>Your Style, Your Stitch</p>
+    <h2>Order Receipt</h2>
+  </div>
+
+  <div class="details">
+    <div class="row">
+      <span class="label">Order ID:</span>
+      <span>{{ORDER_ID}}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Customer Name:</span>
+      <span>{{CUSTOMER_NAME}}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Garment:</span>
+      <span>{{GARMENT}}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Advance Payment:</span>
+      <span>Rs. {{ADVANCE}}</span>
+    </div>
+
+    <div class="row">
+      <span class="label">Remaining Payment:</span>
+      <span>Rs. {{REMAINING}}</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    Thank you for choosing StitchMate!
+  </div>
+</body>
+</html>

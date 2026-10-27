@@ -1,31 +1,29 @@
-
-import React, { useContext } from 'react';
+import { useRoute,useNavigation } from "@react-navigation/native";
+import { useContext } from "react";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
-} from 'react-native';
-
-import { useNavigation, useRoute } from '@react-navigation/native';
+} from "react-native";
 
 import ThemeContext from "../../context/ThemeContext";
-import Ionicons from '@react-native-vector-icons/ionicons';
-export default function AddMeasurement() {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
 
-  const { id } = route.params;
+export default function AddMeasurement() {
+   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+    const { id } = route.params;
 
   const { theme } = useContext(ThemeContext);
 
-  function selectMeasurement(type: string) {
+   function selectMeasurement(type: string) {
     navigation.navigate('MeasurementForm', {
       id: String(id),
       type: type,
-    });
+    }); 
   }
+
 
   return (
     <View
@@ -37,7 +35,10 @@ export default function AddMeasurement() {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text
-            style={[styles.title, { color: theme.text }]}
+            style={[
+              styles.title,
+              { color: theme.text },
+            ]}
           >
             Add Measurement
           </Text>
@@ -65,11 +66,17 @@ export default function AddMeasurement() {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => selectMeasurement('Male Shalwar Kameez')}
+            onPress={() => selectMeasurement("Male Shalwar Kameez")}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
+            <Text
+              style={[
+                styles.cardTitle,
+                { color: theme.text },
+              ]}
+            >
               Male Shalwar Kameez
             </Text>
+
             <Text
               style={[
                 styles.cardSubtitle,
@@ -88,11 +95,17 @@ export default function AddMeasurement() {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => selectMeasurement('Female Shalwar Kameez')}
+            onPress={() => selectMeasurement("Female Shalwar Kameez")}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
+            <Text
+              style={[
+                styles.cardTitle,
+                { color: theme.text },
+              ]}
+            >
               Female Shalwar Kameez
             </Text>
+
             <Text
               style={[
                 styles.cardSubtitle,
@@ -111,11 +124,17 @@ export default function AddMeasurement() {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => selectMeasurement('Pant')}
+            onPress={() => selectMeasurement("Pant")}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
+            <Text
+              style={[
+                styles.cardTitle,
+                { color: theme.text },
+              ]}
+            >
               Pant
             </Text>
+
             <Text
               style={[
                 styles.cardSubtitle,
@@ -134,11 +153,17 @@ export default function AddMeasurement() {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => selectMeasurement('Shirt')}
+            onPress={() => selectMeasurement("Shirt")}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
+            <Text
+              style={[
+                styles.cardTitle,
+                { color: theme.text },
+              ]}
+            >
               Shirt
             </Text>
+
             <Text
               style={[
                 styles.cardSubtitle,
@@ -157,11 +182,17 @@ export default function AddMeasurement() {
                 borderColor: theme.border,
               },
             ]}
-            onPress={() => selectMeasurement('Coat')}
+            onPress={() => selectMeasurement("Coat")}
           >
-            <Text style={[styles.cardTitle, { color: theme.text }]}>
+            <Text
+              style={[
+                styles.cardTitle,
+                { color: theme.text },
+              ]}
+            >
               Coat
             </Text>
+
             <Text
               style={[
                 styles.cardSubtitle,
@@ -188,13 +219,13 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 28,
   },
 
   title: {
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: "800",
   },
 
   subtitle: {
@@ -214,7 +245,7 @@ const styles = StyleSheet.create({
 
   cardTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 
   cardSubtitle: {

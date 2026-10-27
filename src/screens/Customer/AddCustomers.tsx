@@ -1,19 +1,17 @@
 
 import ThemeContext from "../../context/ThemeContext";
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from "@react-native-vector-icons/ionicons";
 import {
   useNavigation,
   useRoute,
-  RouteProp,
-} from '@react-navigation/native';
+} from "@react-navigation/native";
 import {
   CustomButton,
   ConfirmAlert,
-} from '../../components/CustomAlert';
+} from "../../components/CustomAlert";
 import { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Button,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -28,8 +26,6 @@ import {
   updateCunstomer,
 } from "../../database/CustomerCru";
 
-export default function AddCustomers() {
-  const { theme } = useContext(ThemeContext);
 type CustomerParams = {
   ID?: string | number;
   NAME?: string;
@@ -37,12 +33,13 @@ type CustomerParams = {
   ADDRESS?: string;
 };
 
-const navigation = useNavigation<any>();
-const route = useRoute();
+export default function AddCustomers() {
+  const { theme } = useContext(ThemeContext);
+  const navigation = useNavigation<any>();
+  const route = useRoute();
 
-const params = (route.params ?? {}) as CustomerParams;
-
-const { ID, NAME, PHONE, ADDRESS } = params;
+  const params = (route.params ?? {}) as CustomerParams;
+  const { ID, NAME, PHONE, ADDRESS } = params;
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -57,7 +54,6 @@ const { ID, NAME, PHONE, ADDRESS } = params;
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [addressError, setAddressError] = useState("");
-
   const [AlertAll, setAlertALL] = useState(false);
 
   useEffect(() => {
@@ -67,6 +63,25 @@ const { ID, NAME, PHONE, ADDRESS } = params;
       setAddress(ADDRESS?.toString() || "");
     }
   }, [ID, NAME, PHONE, ADDRESS]);
+
+  // Convert different Pakistani phone formats to one format.
+  function normalizePhone(value: string) {
+    const digits = value.replace(/\D/g, "");
+
+    if (digits.startsWith("0092")) {
+      return digits.slice(2);
+    }
+
+    if (digits.startsWith("92")) {
+      return digits;
+    }
+
+    if (digits.startsWith("03")) {
+      return `92${digits.slice(1)}`;
+    }
+
+    return digits;
+  }
 
   function showError(title: string, message: string) {
     setAlertTitle(title);
@@ -99,10 +114,12 @@ const { ID, NAME, PHONE, ADDRESS } = params;
       return false;
     }
 
-    const phonePattern = /^(03\d{9}|\+923\d{9})$/;
+    const phonePattern = /^(03\d{9}|\+923\d{9}|00923\d{9}|923\d{9})$/;
 
     if (!phonePattern.test(CPhone)) {
-      setPhoneError("Enter a valid phone number e.g. 03001234567");
+      setPhoneError(
+        "Enter a valid number, e.g. 03001234567 or +923001234567"
+      );
       return false;
     }
 
@@ -140,6 +157,8 @@ const { ID, NAME, PHONE, ADDRESS } = params;
       return;
     }
 
+    const normalizedPhone = normalizePhone(phone.trim());
+
     try {
       setLoader(true);
 
@@ -147,27 +166,40 @@ const { ID, NAME, PHONE, ADDRESS } = params;
         await updateCunstomer(
           Number(ID),
           name.trim(),
-          phone.trim(),
+          normalizedPhone,
           address.trim()
         );
       } else {
         await AddCustomer(
           name.trim(),
-          phone.trim(),
+          normalizedPhone,
           address.trim()
         );
       }
 
-     navigation.replace("CustomerList");
-    } catch (error) {
+      navigation.replace("CustomerList");
+    } catch (error: any) {
       console.log("Customer save failed:", error);
 
-      setLoader(false);
+      const message = String(error?.message || error);
 
-      showError(
-        "Error",
-        "Something went wrong"
-      );
+      if (
+        message.includes("UNIQUE constraint failed") ||
+        message.includes("Customer_Table.PHONE") ||
+        message.toLowerCase().includes("unique")
+      ) {
+        showError(
+          "Duplicate Number",
+          "This phone number already exists."
+        );
+      } else {
+        showError(
+          "Error",
+          "Unable to save customer. Please try again."
+        );
+      }
+    } finally {
+      setLoader(false);
     }
   }
 
@@ -177,11 +209,7 @@ const { ID, NAME, PHONE, ADDRESS } = params;
         styles.keyboardView,
         { backgroundColor: theme.background },
       ]}
-      behavior={
-        Platform.OS === "ios"
-          ? "padding"
-          : "height"
-      }
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -189,9 +217,7 @@ const { ID, NAME, PHONE, ADDRESS } = params;
         contentContainerStyle={styles.content}
       >
         <View style={styles.form}>
-
           {/* HEADER */}
-
           <View style={styles.header}>
             <View
               style={[
@@ -200,25 +226,14 @@ const { ID, NAME, PHONE, ADDRESS } = params;
               ]}
             >
               <Ionicons
-                name={
-                  ID
-                    ? "create-outline"
-                    : "person-add-outline"
-                }
+                name={ID ? "create-outline" : "person-add-outline"}
                 size={28}
                 color={theme.white}
               />
             </View>
 
-            <Text
-              style={[
-                styles.title,
-                { color: theme.text },
-              ]}
-            >
-              {ID
-                ? "Update Customer"
-                : "Add Customer"}
+            <Text style={[styles.title, { color: theme.text }]}>
+              {ID ? "Update Customer" : "Add Customer"}
             </Text>
 
             <Text
@@ -234,13 +249,7 @@ const { ID, NAME, PHONE, ADDRESS } = params;
           </View>
 
           {/* NAME */}
-
-          <Text
-            style={[
-              styles.label,
-              { color: theme.text },
-            ]}
-          >
+          <Text style={[styles.label, { color: theme.text }]}>
             Name
           </Text>
 
@@ -260,10 +269,7 @@ const { ID, NAME, PHONE, ADDRESS } = params;
             />
 
             <TextInput
-              style={[
-                styles.input,
-                { color: theme.text },
-              ]}
+              style={[styles.input, { color: theme.text }]}
               placeholder="Enter customer name"
               placeholderTextColor={theme.placeholder}
               value={name}
@@ -271,26 +277,16 @@ const { ID, NAME, PHONE, ADDRESS } = params;
                 setName(value);
                 setNameError("");
               }}
-              onBlur={() => {
-                validateName(name);
-              }}
+              onBlur={() => validateName(name)}
             />
           </View>
 
           {nameError ? (
-            <Text style={styles.errorText}>
-              {nameError}
-            </Text>
+            <Text style={styles.errorText}>{nameError}</Text>
           ) : null}
 
           {/* PHONE */}
-
-          <Text
-            style={[
-              styles.label,
-              { color: theme.text },
-            ]}
-          >
+          <Text style={[styles.label, { color: theme.text }]}>
             Phone
           </Text>
 
@@ -310,38 +306,26 @@ const { ID, NAME, PHONE, ADDRESS } = params;
             />
 
             <TextInput
-              style={[
-                styles.input,
-                { color: theme.text },
-              ]}
-              placeholder="Enter phone number"
+              style={[styles.input, { color: theme.text }]}
+              placeholder="03001234567 or +923001234567"
               placeholderTextColor={theme.placeholder}
               value={phone}
               onChangeText={(value) => {
                 setPhone(value);
                 setPhoneError("");
               }}
-              onBlur={() => {
-                validatePhone(phone);
-              }}
+              onBlur={() => validatePhone(phone)}
               keyboardType="phone-pad"
+              maxLength={14}
             />
           </View>
 
           {phoneError ? (
-            <Text style={styles.errorText}>
-              {phoneError}
-            </Text>
+            <Text style={styles.errorText}>{phoneError}</Text>
           ) : null}
 
           {/* ADDRESS */}
-
-          <Text
-            style={[
-              styles.label,
-              { color: theme.text },
-            ]}
-          >
+          <Text style={[styles.label, { color: theme.text }]}>
             Address
           </Text>
 
@@ -372,23 +356,16 @@ const { ID, NAME, PHONE, ADDRESS } = params;
                 setAddress(value);
                 setAddressError("");
               }}
-              onBlur={() => {
-                validateAddress(address);
-              }}
+              onBlur={() => validateAddress(address)}
               multiline
             />
           </View>
 
           {addressError ? (
-            <Text style={styles.errorText}>
-              {addressError}
-            </Text>
+            <Text style={styles.errorText}>{addressError}</Text>
           ) : null}
 
-    
-
           {/* BUTTON */}
-
           {loader ? (
             <ActivityIndicator
               size="large"
@@ -407,25 +384,19 @@ const { ID, NAME, PHONE, ADDRESS } = params;
       </ScrollView>
 
       {/* ERROR ALERT */}
-
       <ConfirmAlert
         visible={showAlert}
         title={alertTitle}
         Message={alertMessage}
-        onConfirm={() => {
-          setShowAlert(false);
-        }}
+        onConfirm={() => setShowAlert(false)}
       />
 
-      {/* ALL FIELDS ALERT */}
-
+      {/* REQUIRED FIELDS ALERT */}
       <ConfirmAlert
         visible={AlertAll}
         title="Required"
         Message="All fields required"
-        onConfirm={() => {
-          setAlertALL(false);
-        }}
+        onConfirm={() => setAlertALL(false)}
       />
     </KeyboardAvoidingView>
   );

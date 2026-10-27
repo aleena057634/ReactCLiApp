@@ -11,6 +11,8 @@ import {
   StyleSheet,
   Text,
   View,
+  Linking,
+  Alert,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -24,11 +26,14 @@ import FloatingButton from "../../components/FloatingButton";
 import SearchBox from "../../components/SearchBox";
 import CustomAlert from "../../components/CustomAlert";
 import ThemeContext from "../../context/ThemeContext";
+
 import {
   DeleteCustomer,
   getCustomers,
 } from "../../database/CustomerCru";
-import Ionicons from '@react-native-vector-icons/ionicons';
+
+import Ionicons from "@react-native-vector-icons/ionicons";
+
 type Customer = {
   ID: number;
   NAME: string;
@@ -76,6 +81,32 @@ export default function CustomerList() {
     }
   }
 
+  // Open the selected customer's WhatsApp chat
+  async function openWhatsApp(phone: string) {
+    let number = phone.replace(/\D/g, "");
+
+    // Pakistani number: 03001234567 -> 923001234567
+    if (number.startsWith("0")) {
+      number = "92" + number.substring(1);
+    } else if (number.length === 10 && number.startsWith("3")) {
+      number = "92" + number;
+    }
+
+    if (!/^92\d{10}$/.test(number)) {
+      Alert.alert(
+        "Invalid Phone Number",
+        "Please check this customer's phone number."
+      );
+      return;
+    }
+
+    try {
+      await Linking.openURL(`https://wa.me/${number}`);
+    } catch (error) {
+      Alert.alert("Error", "Unable to open WhatsApp.");
+    }
+  }
+
   return (
     <SafeAreaView
       style={[
@@ -83,17 +114,8 @@ export default function CustomerList() {
         { backgroundColor: theme.background },
       ]}
     >
-      {/* Customers Heading */}
-      <Text
-        style={[
-          styles.heading,
-          { color: theme.text },
-        ]}
-      >
-        Customers
-      </Text>
+    
 
-      {/* Search */}
       <View style={styles.searchContainer}>
         <SearchBox
           value={search}
@@ -101,7 +123,6 @@ export default function CustomerList() {
         />
       </View>
 
-      {/* Customer List */}
       <FlatList
         data={filteredCustomers}
         keyExtractor={(item) => item.ID.toString()}
@@ -180,7 +201,7 @@ export default function CustomerList() {
               </Text>
             </View>
 
-            {/* Customer Info */}
+            {/* Customer Information */}
             <View style={styles.customerInfo}>
               <Text
                 numberOfLines={1}
@@ -228,8 +249,27 @@ export default function CustomerList() {
               </View>
             </View>
 
-            {/* Actions */}
+            {/* Action Buttons */}
             <View style={styles.actions}>
+              {/* WhatsApp Button */}
+              <Pressable
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: theme.background },
+                ]}
+                onPress={(event) => {
+                  // Prevent opening CustomerDetail
+                  // when the WhatsApp button is clicked.
+                  openWhatsApp(item.PHONE);
+                }}
+              >
+                <Ionicons
+                  name="logo-whatsapp"
+                  color="#25D366"
+                  size={20}
+                />
+              </Pressable>
+
               {/* Delete Button */}
               <Pressable
                 style={[
