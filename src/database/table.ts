@@ -109,18 +109,20 @@ export async function Measurement_table() {
 export async function RelationShipTable() {
   try {
     const db = await databaseConnection;
+
     await db.executeSql(`
-    CREATE TABLE IF NOT EXISTS Relation_Table (
-    Relation_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-    CUSTOMER_ID INTEGER NOT NULL,
-    NAME TEXT NOT NULL,
-    RELATION TEXT NOT NULL,
-    FOREIGN KEY (CUSTOMER_ID) REFERENCES Customer_Table(ID)
-);`)
-   
+      CREATE TABLE IF NOT EXISTS Relation_Table (
+        Relation_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        CUSTOMER_ID INTEGER NOT NULL,
+        NAME TEXT NOT NULL,
+        RELATION TEXT NOT NULL,
+        FOREIGN KEY (CUSTOMER_ID) REFERENCES CUSTOMER(ID)
+      );
+    `);
 
+    console.log('Relation_Table ready');
   } catch (error) {
-
+    console.log('Create Relation Table Error:', error);
   }
 }
 export async function InsertRelation(
@@ -336,7 +338,7 @@ export async function DropMeasurementTable(){
   const db=await databaseConnection;
 try {
    await db.executeSql(
-    `Drop table MEASUREMENTS if exists
+    `Drop table Relation_Table if exists
     `
 
   )

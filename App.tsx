@@ -132,8 +132,8 @@ export default function App() {
         await order_Table();
 await payment_table();
  await Order_Image();
- await RelationShipTable();  DropMeasurementTable();
-
+ await RelationShipTable();  
+// await DropMeasurementTable();
         setDatabaseReady(true);
       } catch (error) {
         console.log('Database initialization error:', error);

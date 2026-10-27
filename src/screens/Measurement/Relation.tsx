@@ -22,7 +22,7 @@ import {
   UpdateRelation,
   DeleteRelation,
 } from '../../database/table';
-
+import CustomAlert from '../../components/CustomAlert';
 export default function Relation() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
@@ -38,6 +38,8 @@ const [members, setMembers] = useState<any[]>([]);
 const [editingId, setEditingId] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [loader, setLoader] = useState(false);
+const [alertVisible, setAlertVisible] = useState(false);
+const [selectedMember, setSelectedMember] = useState<any>(null);
 
   const options = [
     'Brother',

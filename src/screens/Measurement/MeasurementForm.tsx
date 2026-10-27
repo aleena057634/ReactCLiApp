@@ -27,6 +27,7 @@ const navigation = useNavigation<any>();
 
 const {
   id,
+    relationId,
   type,
   measurementId,
   Chest,
@@ -273,11 +274,12 @@ async function saveMeasurement() {
 
     console.log("Update result:", result);
   } else {
-    const result = await addMeasurement(
-      Number(id),
-      type?.toString() || "",
-      measurement
-    );
+   const result = await addMeasurement(
+  Number(id),
+  type?.toString() || "",
+  measurement,
+  relationId != null ? Number(relationId) : null
+);
 
     console.log("Add result:", result);
   }

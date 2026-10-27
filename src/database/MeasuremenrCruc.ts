@@ -2,10 +2,12 @@
 import databaseConnection from "./DatabaseConnection";
 
 // ADD MEASUREMENT
+
 export async function addMeasurement(
   customerId: number,
   type: string,
-  measurement: any
+  measurement: any,
+  relationId: number | null = null
 ) {
   try {
     const db = await databaseConnection;
@@ -13,6 +15,7 @@ export async function addMeasurement(
     await db.executeSql(
       `INSERT INTO MEASUREMENTS (
         CUSTOMER_ID,
+        RELATION_ID,
         TYPE,
         CHEST,
         WAIST,
@@ -30,9 +33,10 @@ export async function addMeasurement(
         LENGTH,
         ARMHOLE,
         NOTES
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         customerId,
+        relationId,
         type,
         measurement.Chest ? Number(measurement.Chest) : null,
         measurement.Waist ? Number(measurement.Waist) : null,

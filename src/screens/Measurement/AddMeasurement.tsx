@@ -13,17 +13,18 @@ import ThemeContext from "../../context/ThemeContext";
 export default function AddMeasurement() {
    const navigation = useNavigation<any>();
   const route = useRoute<any>();
-    const { id } = route.params;
+const { id, relationId } = route.params;
 
   const { theme } = useContext(ThemeContext);
 
-   function selectMeasurement(type: string) {
-    navigation.navigate('MeasurementForm', {
-      id: String(id),
-      type: type,
-    }); 
-  }
-
+  function selectMeasurement(type: string) {
+  navigation.navigate('MeasurementForm', {
+    id: String(id),
+    relationId:
+      relationId != null ? Number(relationId) : null,
+    type: type,
+  });
+}
 
   return (
     <View
